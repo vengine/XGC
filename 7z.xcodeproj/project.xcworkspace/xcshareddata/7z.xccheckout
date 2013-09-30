@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>9013A0C1-F612-4503-AD2F-8CB1D649D88A</string>
+	<key>IDESourceControlProjectName</key>
+	<string>7z</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>047BE4CD-9639-4FF3-B974-4D0D447E01F1</key>
+		<string>https://github.com/vengine/7Z.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>7z.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>047BE4CD-9639-4FF3-B974-4D0D447E01F1</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/vengine/7Z.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>047BE4CD-9639-4FF3-B974-4D0D447E01F1</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>047BE4CD-9639-4FF3-B974-4D0D447E01F1</string>
+			<key>IDESourceControlWCCName</key>
+			<string>7Z</string>
+		</dict>
+	</array>
+</dict>
+</plist>
