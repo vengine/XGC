@@ -83,7 +83,7 @@ xhn::garbage_collector::~garbage_collector()
 {}
 vptr xhn::garbage_collector::alloc(euint size, const char* _file, euint32 _line)
 {
-    vptr ret = Malloc(size);
+    vptr ret = SMalloc(size);
 	if (ret) {
 		SpinLock::Instance inst = m_senderLock.Lock();
 		m_sender->create(ret, size);

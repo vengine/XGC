@@ -96,7 +96,7 @@ public:
 		m_count++;
 		if (m_count > 10000)
 		    printf("size %d\n", m_btree.size());
-			**/
+		**/
 	}
 	void attach ( const vptr section, vptr mem ) {
 		mem_btree_node* node = m_btree.find(mem);
@@ -201,13 +201,14 @@ public:
             m_ptr = NULL;
         }
         const MemHandle& operator = (const MemHandle& ptr) {
-            if (!ptr.m_ptr || m_ptr == ptr.m_ptr)
+            if (m_ptr == ptr.m_ptr)
                 return *this;
             if (m_ptr) {
                 garbage_collector::get()->detach((vptr)this, (vptr)m_ptr);
             }
             m_ptr = ptr.m_ptr;
-            garbage_collector::get()->attach((vptr)this, (vptr)ptr.m_ptr);
+			if (ptr.m_ptr)
+                garbage_collector::get()->attach((vptr)this, (vptr)ptr.m_ptr);
             return *this;
         }
         T* operator ->() {

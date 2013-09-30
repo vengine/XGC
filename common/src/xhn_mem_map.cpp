@@ -2,13 +2,13 @@
 #include "xhn_mem_map.hpp"
 #include "xhn_garbage_collector.hpp"
 
-bool xhn::mem_btree_node::_TrackBack(mem_btree_node* mem, mem_set& trackBuffer)
+bool xhn::mem_btree_node::_TrackBack(mem_set& trackBuffer)
 {
 	if (root_ref_count)
 		return true;
 
-	mem_set::iterator iter = mem->input_set.begin();
-	mem_set::iterator end = mem->input_set.end();
+	mem_set::iterator iter = input_set.begin();
+	mem_set::iterator end = input_set.end();
 	for (; iter != end; iter++)
 	{
 		mem_btree_node* i = *iter;
@@ -19,11 +19,11 @@ bool xhn::mem_btree_node::_TrackBack(mem_btree_node* mem, mem_set& trackBuffer)
 			continue;
 		}
 		trackBuffer.insert(i);
-		if (_TrackBack(i, trackBuffer)) {
+		if (i->_TrackBack(trackBuffer)) {
 			return true;
 		}
 	}
-	if (this == mem) {
+	{
 		iter = output_set.begin();
 		end = output_set.end();
 		for (; iter != end; iter++) {
@@ -36,6 +36,14 @@ bool xhn::mem_btree_node::_TrackBack(mem_btree_node* mem, mem_set& trackBuffer)
 		}
 		output_set.clear();
 		{
+			iter = input_set.begin();
+			end = input_set.end();
+			for (; iter != end; iter++)
+			{
+				mem_btree_node* i = *iter;
+				i->output_set.erase(this);
+			}
+			input_set.clear();
 			garbage_collect_robot::get()->remove(begin_addr);
 		}
 	}
@@ -45,7 +53,7 @@ bool xhn::mem_btree_node::_TrackBack(mem_btree_node* mem, mem_set& trackBuffer)
 bool xhn::mem_btree_node::TrackBack()
 {
 	mem_set trackBuffer;
-	return _TrackBack(this, trackBuffer);
+	return _TrackBack(trackBuffer);
 }
 
 void xhn::mem_btree_node::Attach(mem_btree_node* mem)

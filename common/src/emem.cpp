@@ -659,6 +659,7 @@ vptr _SMalloc(euint _size, const char* _file, euint32 _line)
     refer_info info;
     info.file_name = _file;
     info.line = _line;
+	info.test_mark = ETestMark();
     ((refer_info*)((char*)ret - REFER_INFO_RESERVED))[0] = info;
 #endif
     return ret;

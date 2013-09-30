@@ -112,7 +112,7 @@ namespace xhn
             }
         }
 
-		bool _TrackBack(mem_btree_node* mem, mem_set& trackBuffer);
+		bool _TrackBack(mem_set& trackBuffer);
 		bool TrackBack();
 		void Attach(mem_btree_node* mem);
 		void Detach(mem_btree_node* mem);
