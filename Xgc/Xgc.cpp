@@ -56,7 +56,7 @@ typedef xhn::garbage_collector::MemHandle<List> ListHandle;
 int main(void)
 {
 	int count = 0;
-	///while (1)
+	while (1)
 	{
 		/**
 		xhn::TestObjectHandle handle;
@@ -79,23 +79,74 @@ int main(void)
 		ListHandle list;
 		ListNodeHandle iter;
 		list = GC_ALLOC(List);
+		for (int i = 0; i < 100; i++) {
+			xhn::garbage_collect_robot::get()->DoAction();
+		}
 		list->Test();
+		for (int i = 0; i < 100; i++) {
+			xhn::garbage_collect_robot::get()->DoAction();
+		}
 		list->PushBack(1);
+		for (int i = 0; i < 100; i++) {
+			xhn::garbage_collect_robot::get()->DoAction();
+		}
 		list->Test();
+		for (int i = 0; i < 100; i++) {
+			xhn::garbage_collect_robot::get()->DoAction();
+		}
 		list->PushBack(2);
+		for (int i = 0; i < 100; i++) {
+			xhn::garbage_collect_robot::get()->DoAction();
+		}
 		list->Test();
+		for (int i = 0; i < 100; i++) {
+			xhn::garbage_collect_robot::get()->DoAction();
+		}
         list->PushBack(3);
+		for (int i = 0; i < 100; i++) {
+			xhn::garbage_collect_robot::get()->DoAction();
+		}
 		list->Test();
+		for (int i = 0; i < 100; i++) {
+			xhn::garbage_collect_robot::get()->DoAction();
+		}
 		list->PushBack(4);
+		for (int i = 0; i < 100; i++) {
+			xhn::garbage_collect_robot::get()->DoAction();
+		}
 		list->Test();
+		for (int i = 0; i < 100; i++) {
+			xhn::garbage_collect_robot::get()->DoAction();
+		}
 		iter = list->m_head;
+		for (int i = 0; i < 100; i++) {
+			xhn::garbage_collect_robot::get()->DoAction();
+		}
 		list->Test();
+		for (int i = 0; i < 100; i++) {
+			xhn::garbage_collect_robot::get()->DoAction();
+		}
 		iter = iter->m_next;
+		for (int i = 0; i < 100; i++) {
+			xhn::garbage_collect_robot::get()->DoAction();
+		}
 		list->Test();
+		for (int i = 0; i < 100; i++) {
+			xhn::garbage_collect_robot::get()->DoAction();
+		}
 		///iter->Erase();
 		list->Print();
+		for (int i = 0; i < 100; i++) {
+			xhn::garbage_collect_robot::get()->DoAction();
+		}
 		list->Test();
+
+		for (int i = 0; i < 100; i++) {
+			xhn::garbage_collect_robot::get()->DoAction();
+		}
 	}
-	while(1) {}
+	while(1) {
+		
+	}
 	return 0;
 }

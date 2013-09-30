@@ -76,8 +76,8 @@ xhn::garbage_collector::garbage_collector()
 
 	RobotManager::Get()->MakeChannel(COMMAND_SENDER, COMMAND_RECEIVER);
 
-	RobotThreadManager::Init();
-	RobotThreadManager::Get()->AddRobotThread();
+	///RobotThreadManager::Init();
+	///RobotThreadManager::Get()->AddRobotThread();
 }
 xhn::garbage_collector::~garbage_collector()
 {}
