@@ -56,7 +56,7 @@ bool xhn::Utf8::utf8fromwcs(const wchar_t* wcs, vector< char, FGetCharRealSizePr
 {
 	const wchar_t *pc = wcs;
 	euint num_errors = 0;
-	int i = 0;
+	///int i = 0;
 	for(unsigned int c = *pc; c != 0 ; c = *(++pc)) 
 	{
 		if (c < (1 << 7)) 

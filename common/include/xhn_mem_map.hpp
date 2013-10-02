@@ -12,6 +12,7 @@
 #include "xhn_rbtree.hpp"
 #include "xhn_pair.hpp"
 
+#include "xhn_map.hpp"
 #include "xhn_set.hpp"
 #include "xhn_lock.hpp"
 #include "xhn_atomic_operation.hpp"
@@ -22,6 +23,25 @@ namespace xhn
     class mem_btree_node : public MemObject
     {
 	public:
+        struct input_pair
+        {
+            mem_btree_node* node;
+            vptr handle;
+            bool operator < (const input_pair& ip) const {
+                if ((ref_ptr)node < (ref_ptr)ip.node)
+                    return true;
+                else if ((ref_ptr)node > (ref_ptr)ip.node)
+                    return false;
+                else {
+                    if ((ref_ptr)handle < (ref_ptr)ip.handle)
+                        return true;
+                    else
+                        return false;
+                }
+            }
+        };
+        typedef map<input_pair, mem_btree_node*> input_mem_map;
+        typedef map<vptr, mem_btree_node*> mem_map;
 		typedef set<mem_btree_node*> mem_set;
     public:
         euint8 section;
@@ -30,11 +50,12 @@ namespace xhn
         euint32 num_children;
         vptr begin_addr;
         vptr end_addr;
-		mem_set input_set;
-		mem_set output_set;
+		input_mem_map input_map;
+		mem_map output_map;
 		volatile esint32 root_ref_count;
 		mem_btree_node* prev;
 		mem_btree_node* next;
+        const char* name;
     public:
         mem_btree_node()
         : section(0)
@@ -45,6 +66,7 @@ namespace xhn
 		, root_ref_count(0)
 		, prev( NULL )
 		, next( NULL )
+        , name( NULL )
         {
             memset(children, 0, sizeof(children));
         }
@@ -114,8 +136,8 @@ namespace xhn
 
 		bool _TrackBack(mem_set& trackBuffer);
 		bool TrackBack();
-		void Attach(mem_btree_node* mem);
-		void Detach(mem_btree_node* mem);
+		void Attach(const vptr handle, mem_btree_node* mem);
+		void Detach(const vptr handle, mem_btree_node* mem);
 		void AttchToRoot();
 		void DetachFromRoot();
     };
@@ -131,7 +153,7 @@ namespace xhn
         {
             root = ENEW mem_btree_node();
         }
-        void insert(const vptr ptr, euint size) {
+        void insert(const vptr ptr, euint size, const char* name) {
 			bool added = false;
             mem_btree_node* track_buffer[sizeof(ptr) * 2 + 1];
             mem_btree_node* node = root;
@@ -157,6 +179,7 @@ namespace xhn
                 mask >>= 4;
             }
             track_buffer[0] = node;
+            node->name = name;
             node->begin_addr = ptr;
             node->end_addr = (vptr)((ref_ptr)ptr + size);
             for (euint i = 1; i < num_bytes * 2 + 1; i++) {
@@ -177,8 +200,8 @@ namespace xhn
                     return false;
                 node = next;
             }
-			if (node->prev) { node->prev->next = node->next; }
-			if (node->next) { node->next->prev = node->prev; }
+			///if (node->prev) { node->prev->next = node->next; }
+			///if (node->next) { node->next->prev = node->prev; }
             track_buffer[0] = node;
             for (euint i = 1; i < num_bytes * 2 + 1; i++) {
                 mem_btree_node* next = track_buffer[i];
@@ -235,6 +258,7 @@ namespace xhn
 		euint size() {
 			return count;
 		}
+        void push_detach_node(mem_btree_node* node);
     };
 }
 

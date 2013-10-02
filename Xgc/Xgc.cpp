@@ -3,19 +3,40 @@
 
 #include "xhn_garbage_collector.hpp"
 #include "xhn_mem_handle.hpp"
+class MemHandleListenerXX : public xhn::garbage_collector::MemHandleListener
+{
+public:
+    virtual void PreAssign() {
+        printf("here\n");
+    }
+    virtual void PreDest() {
+        printf("here\n");
+    }
+};
+static MemHandleListenerXX s_MemHandleListenerXX;
 class ListNode
 {
 public:
+    MemHandleListenerXX m_list;
     xhn::garbage_collector::MemHandle<ListNode> m_prev;
 	xhn::garbage_collector::MemHandle<ListNode> m_next;
 	int m_value;
 	ListNode()
-	{}
+	{
+        //m_prev = GC_ALLOC(ListNode, "PrevNode");
+        ///m_next = GC_ALLOC(ListNode, "NextNode");
+        ///m_next.SetListener(&m_list);
+    }
 	void Erase() {
 		if (m_next.get()) { m_next->m_prev = m_prev; }
 		if (m_prev.get()) { m_prev->m_next = m_next; }
 	}
 };
+static const char* s_names[] =
+    {"PushedNode_value_1",
+    "PushedNode_value_2",
+    "PushedNode_value_3",
+    "PushedNode_value_4"};
 typedef xhn::garbage_collector::MemHandle<ListNode> ListNodeHandle;
 class List
 {
@@ -24,8 +45,11 @@ public:
 	ListNodeHandle m_tail;
 public:
 	void PushBack(int value) {
+        char mbuf[256];
+        ///snprintf(mbuf, 255, "PushedNode_value_%d", value);
+        ///xhn::static_string str(mbuf);
         ListNodeHandle node;
-		node = GC_ALLOC(ListNode);
+		node = GC_ALLOC(ListNode, s_names[value - 1]);
 		node->m_value = value;
 		if (m_tail.get()) {
             m_tail->m_next = node;
@@ -33,6 +57,7 @@ public:
 		}
 		else {
 			m_head = m_tail = node;
+            ///printf("%llx\n", m_head->m_next.get());
 		}
 	}
 	void Test() {
@@ -55,7 +80,7 @@ public:
 typedef xhn::garbage_collector::MemHandle<List> ListHandle;
 int main(void)
 {
-	int count = 0;
+	///int count = 0;
 	while (1)
 	{
 		/**
@@ -75,75 +100,33 @@ int main(void)
 			count = 0;
 		}
 		**/
-		
+        ///printf("\n############\n");
 		ListHandle list;
+        ///list.SetListener(&s_MemHandleListenerXX);
 		ListNodeHandle iter;
-		list = GC_ALLOC(List);
-		for (int i = 0; i < 100; i++) {
-			xhn::garbage_collect_robot::get()->DoAction();
-		}
+		list = GC_ALLOC(List, "TestedList");
 		list->Test();
-		for (int i = 0; i < 100; i++) {
-			xhn::garbage_collect_robot::get()->DoAction();
-		}
 		list->PushBack(1);
-		for (int i = 0; i < 100; i++) {
-			xhn::garbage_collect_robot::get()->DoAction();
-		}
 		list->Test();
-		for (int i = 0; i < 100; i++) {
-			xhn::garbage_collect_robot::get()->DoAction();
-		}
 		list->PushBack(2);
-		for (int i = 0; i < 100; i++) {
-			xhn::garbage_collect_robot::get()->DoAction();
-		}
 		list->Test();
-		for (int i = 0; i < 100; i++) {
-			xhn::garbage_collect_robot::get()->DoAction();
-		}
         list->PushBack(3);
-		for (int i = 0; i < 100; i++) {
-			xhn::garbage_collect_robot::get()->DoAction();
-		}
 		list->Test();
-		for (int i = 0; i < 100; i++) {
-			xhn::garbage_collect_robot::get()->DoAction();
-		}
 		list->PushBack(4);
-		for (int i = 0; i < 100; i++) {
-			xhn::garbage_collect_robot::get()->DoAction();
-		}
 		list->Test();
-		for (int i = 0; i < 100; i++) {
-			xhn::garbage_collect_robot::get()->DoAction();
-		}
 		iter = list->m_head;
-		for (int i = 0; i < 100; i++) {
-			xhn::garbage_collect_robot::get()->DoAction();
-		}
 		list->Test();
-		for (int i = 0; i < 100; i++) {
-			xhn::garbage_collect_robot::get()->DoAction();
-		}
 		iter = iter->m_next;
-		for (int i = 0; i < 100; i++) {
-			xhn::garbage_collect_robot::get()->DoAction();
-		}
 		list->Test();
-		for (int i = 0; i < 100; i++) {
-			xhn::garbage_collect_robot::get()->DoAction();
-		}
 		///iter->Erase();
 		list->Print();
-		for (int i = 0; i < 100; i++) {
-			xhn::garbage_collect_robot::get()->DoAction();
-		}
 		list->Test();
-
+/**
 		for (int i = 0; i < 100; i++) {
 			xhn::garbage_collect_robot::get()->DoAction();
 		}
+ **/
+        
 	}
 	while(1) {
 		

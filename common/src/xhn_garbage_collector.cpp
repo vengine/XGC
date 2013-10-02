@@ -13,7 +13,7 @@ xhn::garbage_collect_robot* xhn::garbage_collect_robot::s_garbage_collect_robot 
 void xhn::mem_create_command::Do(Robot* exeRob, xhn::static_string sender)
 {
     garbage_collect_robot* gcRobot = exeRob->DynamicCast<garbage_collect_robot>();
-	gcRobot->insert(mem, size);
+	gcRobot->insert(mem, size, name);
 }
 void xhn::mem_attatch_command::Do(Robot* exeRob, xhn::static_string sender)
 {
@@ -36,9 +36,9 @@ void xhn::garbage_collect_robot::CommandProcImpl(xhn::static_string sender, Robo
     command->Do(this, sender);
 }
 
-void xhn::sender_robot::create ( const vptr mem, euint size )
+void xhn::sender_robot::create ( const vptr mem, euint size, const char* name )
 {
-	mem_create_command* cmd = ENEW mem_create_command(mem, size);
+	mem_create_command* cmd = ENEW mem_create_command(mem, size, name);
 	RobotManager::Get()->SendCommand(GetName(), COMMAND_RECEIVER, cmd);
 }
 void xhn::sender_robot::attach ( const vptr section, vptr mem )
@@ -53,9 +53,6 @@ void xhn::sender_robot::detach ( const vptr section, vptr mem )
 }
 
 xhn::garbage_collector* xhn::garbage_collector::s_garbage_collector = NULL;
-
-static int s_alloc_count = 0;
-static bool s_print_time = false;
 
 void* xhn::garbage_collector::garbage_collector_proc(void* gc)
 {
@@ -76,17 +73,17 @@ xhn::garbage_collector::garbage_collector()
 
 	RobotManager::Get()->MakeChannel(COMMAND_SENDER, COMMAND_RECEIVER);
 
-	///RobotThreadManager::Init();
-	///RobotThreadManager::Get()->AddRobotThread();
+	RobotThreadManager::Init();
+	RobotThreadManager::Get()->AddRobotThread();
 }
 xhn::garbage_collector::~garbage_collector()
 {}
-vptr xhn::garbage_collector::alloc(euint size, const char* _file, euint32 _line)
+vptr xhn::garbage_collector::alloc(euint size, const char* _file, euint32 _line, const char* _name)
 {
     vptr ret = SMalloc(size);
 	if (ret) {
 		SpinLock::Instance inst = m_senderLock.Lock();
-		m_sender->create(ret, size);
+		m_sender->create(ret, size, _name);
 	}
 	else {
 		printf("here\n");

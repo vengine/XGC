@@ -5,36 +5,36 @@
 	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
 	<false/>
 	<key>IDESourceControlProjectIdentifier</key>
-	<string>9013A0C1-F612-4503-AD2F-8CB1D649D88A</string>
+	<string>04282AAC-5232-447C-A1E3-4B37BF528727</string>
 	<key>IDESourceControlProjectName</key>
-	<string>7z</string>
+	<string>Xgc</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
-		<key>047BE4CD-9639-4FF3-B974-4D0D447E01F1</key>
-		<string>https://github.com/vengine/7Z.git</string>
+		<key>F75CE54A-6D3E-46D9-BA78-32D47F42CA30</key>
+		<string>https://github.com/vengine/XGC.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>7z.xcodeproj/project.xcworkspace</string>
+	<string>Xgc.xcodeproj/project.xcworkspace</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
-		<key>047BE4CD-9639-4FF3-B974-4D0D447E01F1</key>
+		<key>F75CE54A-6D3E-46D9-BA78-32D47F42CA30</key>
 		<string>../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
-	<string>https://github.com/vengine/7Z.git</string>
+	<string>https://github.com/vengine/XGC.git</string>
 	<key>IDESourceControlProjectVersion</key>
 	<integer>110</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>047BE4CD-9639-4FF3-B974-4D0D447E01F1</string>
+	<string>F75CE54A-6D3E-46D9-BA78-32D47F42CA30</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>047BE4CD-9639-4FF3-B974-4D0D447E01F1</string>
+			<string>F75CE54A-6D3E-46D9-BA78-32D47F42CA30</string>
 			<key>IDESourceControlWCCName</key>
-			<string>7Z</string>
+			<string>XGC</string>
 		</dict>
 	</array>
 </dict>

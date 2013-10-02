@@ -17,10 +17,12 @@ class mem_create_command : public RobotCommand
 public:
 	vptr mem;
 	euint size;
+    const char* name;
 public:
-    mem_create_command(vptr m, euint s)
-		: mem(m)
-		, size(s)
+    mem_create_command(vptr m, euint s, const char* n)
+    : mem(m)
+    , size(s)
+    , name(n)
 	{}
 	virtual bool Test(Robot* exeRob) { return true; }
 	virtual void Do(Robot* exeRob, xhn::static_string sender);
@@ -33,8 +35,8 @@ public:
 	vptr mem;
 public:
 	mem_attatch_command(vptr s, vptr m) 
-		: section(s)
-		, mem(m)
+    : section(s)
+    , mem(m)
 	{}
 	virtual bool Test(Robot* exeRob) { return true; }
 	virtual void Do(Robot* exeRob, xhn::static_string sender);
@@ -47,8 +49,8 @@ public:
 	vptr mem;
 public:
 	mem_detach_command(vptr s, vptr m) 
-		: section(s)
-		, mem(m)
+    : section(s)
+    , mem(m)
 	{}
 	virtual bool Test(Robot* exeRob) { return true; }
 	virtual void Do(Robot* exeRob, xhn::static_string sender);
@@ -71,11 +73,13 @@ public:
 	mem_btree_node* head;
 	mem_btree_node* tail;
 	euint m_count;
+    bool m_isDebugging;
 public:
     garbage_collect_robot()
-		: m_count(0)
-		, head(NULL)
-		, tail(NULL)
+    : m_count(0)
+    , head(NULL)
+    , tail(NULL)
+    , m_isDebugging(false)
 	{
 		s_garbage_collect_robot = this;
 	}
@@ -85,8 +89,8 @@ public:
 	static garbage_collect_robot* get() {
 		return s_garbage_collect_robot;
 	}
-	void insert ( const vptr p, euint s ) {
-		m_btree.insert((vptr)p, s);
+	void insert ( const vptr p, euint s, const char* n ) {
+		m_btree.insert((vptr)p, s, n);
 	}
 	void remove ( const vptr p ) {
 		if (m_btree.remove((vptr)p)) {
@@ -103,11 +107,49 @@ public:
 		if (node) {
 			mem_btree_node* parent = m_btree.find(section);
 			if (parent) {
-				parent->Attach(node);
+				parent->Attach(section, node);
+                if (m_isDebugging) {
+                    printf("##Attach begin##\n");
+                    printf("%s attach to the %s\n", node->name, parent->name);
+                    printf("%s root ref count is %d\n",
+                           node->name,
+                           (euint32)node->root_ref_count);
+                    printf("%s number of input links is %d\n",
+                           node->name,
+                           (euint32)node->input_map.size());
+                    printf("%s number of output links is %d\n",
+                           node->name,
+                           (euint32)node->output_map.size());
+                    printf("%s root ref count is %d\n",
+                           parent->name,
+                           (euint32)parent->root_ref_count);
+                    printf("%s number of input links is %d\n",
+                           parent->name,
+                           (euint32)parent->input_map.size());
+                    printf("%s number of output links is %d\n",
+                           parent->name,
+                           (euint32)parent->output_map.size());
+                    printf("##Attach end##\n");
+                }
 			}
 			else {
 				node->AttchToRoot();
+                if (m_isDebugging) {
+                    printf("##Attach begin##\n");
+                    printf("%s attach to root\n", node->name);
+                    printf("%s root ref count is %d\n",
+                           node->name,
+                           (euint32)node->root_ref_count);
+                    printf("%s number of input links is %d\n",
+                           node->name,
+                           (euint32)node->input_map.size());
+                    printf("%s number of output links is %d\n",
+                           node->name,
+                           (euint32)node->output_map.size());
+                    printf("##Attach end##\n");
+                }
 			}
+            push_detach_node(node);
 		}
 	}
 	void detach ( const vptr section, vptr mem ) {
@@ -115,10 +157,47 @@ public:
 		if (node) {
 			mem_btree_node* parent = m_btree.find(section);
 			if (parent) {
-				parent->Detach(node);
+				parent->Detach(section, node);
+                if (m_isDebugging) {
+                    printf("##Detach begin##\n");
+                    printf("%s detach from the %s\n", node->name, parent->name);
+                    printf("%s root ref count is %d\n",
+                           node->name,
+                           (euint32)node->root_ref_count);
+                    printf("%s number of input links is %d\n",
+                           node->name,
+                           (euint32)node->input_map.size());
+                    printf("%s number of output links is %d\n",
+                           node->name,
+                           (euint32)node->output_map.size());
+                    printf("%s root ref count is %d\n",
+                           parent->name,
+                           (euint32)parent->root_ref_count);
+                    printf("%s number of input links is %d\n",
+                           parent->name,
+                           (euint32)parent->input_map.size());
+                    printf("%s number of output links is %d\n",
+                           parent->name,
+                           (euint32)parent->output_map.size());
+                    printf("##Detach end##\n");
+                }
 			}
 			else {
 				node->DetachFromRoot();
+                if (m_isDebugging) {
+                    printf("##Detach begin##\n");
+                    printf("%s detach from root\n", node->name);
+                    printf("%s root ref count is %d\n",
+                           node->name,
+                           (euint32)node->root_ref_count);
+                    printf("%s number of input links is %d\n",
+                           node->name,
+                           (euint32)node->input_map.size());
+                    printf("%s number of output links is %d\n",
+                           node->name,
+                           (euint32)node->output_map.size());
+                    printf("##Detach end##\n");
+                }
 			}
 		}
 	}
@@ -126,10 +205,12 @@ public:
 		if (node == tail)
 			return;
 		if (node == head) { head = node->next; }
-		if (node->prev) { node->prev->next = node->next; }
-		if (node->next) { node->next->prev = node->prev; }
+		if (node->prev)   { node->prev->next = node->next; }
+		if (node->next)   { node->next->prev = node->prev; }
 		node->next = NULL;
 		node->prev = tail;
+        if (tail)
+            tail->next = node;
 		tail = node;
 		if (!head)
 			head = node;
@@ -137,8 +218,18 @@ public:
 	void scan_detach_nodes() {
 		mem_btree_node* node = tail;
 		while (node) {
-			node->TrackBack();
-			node = node->prev;
+			if (!node->TrackBack()) {
+                vptr ptr = node->begin_addr;
+                if (node == head) { head = node->next; }
+                if (node == tail) { tail = node->next; }
+                if (node->prev)   { node->prev->next = node->next; }
+                if (node->next)   { node->next->prev = node->prev; }
+                node = node->prev;
+                remove(ptr);
+            }
+            else {
+			    node = node->prev;
+            }
 		}
 	}
 	virtual void CommandProcImpl(xhn::static_string sender, RobotCommand* command);
@@ -150,7 +241,7 @@ class sender_robot : public Robot
 {
     DeclareRTTI;
 public:
-	void create ( const vptr mem, euint size );
+	void create ( const vptr mem, euint size, const char* name );
 	void attach ( const vptr section, vptr mem );
 	void detach ( const vptr section, vptr mem );
 	virtual xhn::static_string GetName() { return COMMAND_SENDER; }
@@ -161,20 +252,29 @@ class garbage_collector : public MemObject
 	template <typename> friend class MemHandle;
 	friend class mem_btree_node;
 public:
+    class MemHandleListener
+    {
+    public:
+        virtual void PreAssign() = 0;
+        virtual void PreDest() = 0;
+    };
     template <typename T>
     class MemHandle : public BannedAllocObject
     {
         friend class garbage_collector;
     private:
         T* m_ptr;
+        MemHandleListener* m_list;
         bool m_isTransfer;
         explicit MemHandle(T* ptr)
 		: m_ptr(ptr)
+        , m_list(NULL)
         , m_isTransfer(true)
         {
         }
         MemHandle(const MemHandle<T>& ptr)
 		: m_ptr((T*)ptr.m_ptr)
+        , m_list(NULL)
         , m_isTransfer(false)
         {
             if (m_ptr == ptr.m_ptr)
@@ -186,12 +286,21 @@ public:
             garbage_collector::get()->attach((vptr)this, (vptr)ptr.m_ptr);
         }
     public:
+        void SetListener(MemHandleListener* list) {
+            m_list = list;
+        }
+        bool IsTransfer() {
+            return m_isTransfer;
+        }
         explicit MemHandle()
         : m_ptr(NULL)
+        , m_list(NULL)
         , m_isTransfer(false)
         {}
         ~MemHandle()
         {
+            if (m_list)
+                m_list->PreDest();
             if (m_isTransfer) {
                 return;
             }
@@ -201,6 +310,8 @@ public:
             m_ptr = NULL;
         }
         const MemHandle& operator = (const MemHandle& ptr) {
+            if (m_list)
+                m_list->PreAssign();
             if (m_ptr == ptr.m_ptr)
                 return *this;
             if (m_ptr) {
@@ -231,19 +342,19 @@ private:
 private:
 	garbage_collector();
 	~garbage_collector();
-	vptr alloc(euint size, const char* _file, euint32 _line);
+	vptr alloc(euint size, const char* _file, euint32 _line, const char* _name);
 	void attach(vptr section, vptr mem);
 	void detach(vptr section, vptr mem);
 public:
 	static garbage_collector* get();
     template <typename T>
-    MemHandle<T> alloc(const char* _file, euint32 _line) {
-		vptr ptr = alloc(sizeof(T), _file, _line);
+    MemHandle<T> alloc(const char* _file, euint32 _line, const char* _name) {
+		vptr ptr = alloc(sizeof(T), _file, _line, _name);
 		new(ptr) T();
 		return MemHandle<T>((T*)ptr);
 	}
 };
 }
 
-#define GC_ALLOC(t) xhn::garbage_collector::get()->alloc<t>(__FILE__, __LINE__)
+#define GC_ALLOC(t, n) xhn::garbage_collector::get()->alloc<t>(__FILE__, __LINE__, n)
 #endif

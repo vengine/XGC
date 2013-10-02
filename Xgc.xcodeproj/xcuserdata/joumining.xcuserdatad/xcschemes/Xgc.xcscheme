@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0460"
+   LastUpgradeVersion = "0500"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,10 +14,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "68E62C4817CB83C200DE20CF"
-               BuildableName = "7z"
-               BlueprintName = "7z"
-               ReferencedContainer = "container:7z.xcodeproj">
+               BlueprintIdentifier = "68F877B717F9A3F500FAA0DF"
+               BuildableName = "Xgc"
+               BlueprintName = "Xgc"
+               ReferencedContainer = "container:Xgc.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -32,10 +32,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "68E62C4817CB83C200DE20CF"
-            BuildableName = "7z"
-            BlueprintName = "7z"
-            ReferencedContainer = "container:7z.xcodeproj">
+            BlueprintIdentifier = "68F877B717F9A3F500FAA0DF"
+            BuildableName = "Xgc"
+            BlueprintName = "Xgc"
+            ReferencedContainer = "container:Xgc.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </TestAction>
@@ -51,10 +51,10 @@
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "68E62C4817CB83C200DE20CF"
-            BuildableName = "7z"
-            BlueprintName = "7z"
-            ReferencedContainer = "container:7z.xcodeproj">
+            BlueprintIdentifier = "68F877B717F9A3F500FAA0DF"
+            BuildableName = "Xgc"
+            BlueprintName = "Xgc"
+            ReferencedContainer = "container:Xgc.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -69,10 +69,10 @@
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "68E62C4817CB83C200DE20CF"
-            BuildableName = "7z"
-            BlueprintName = "7z"
-            ReferencedContainer = "container:7z.xcodeproj">
+            BlueprintIdentifier = "68F877B717F9A3F500FAA0DF"
+            BuildableName = "Xgc"
+            BlueprintName = "Xgc"
+            ReferencedContainer = "container:Xgc.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
