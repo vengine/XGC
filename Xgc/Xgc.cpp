@@ -83,16 +83,28 @@ int main(void)
 	///int count = 0;
 	while (1)
 	{
-		/**
+/**
+        for (int i = 0; i < 100; i++) {
+            xhn::garbage_collect_robot* rob = xhn::garbage_collect_robot::get();
+            if (rob)
+			    rob->DoAction();
+		}
+        for (int i = 0; i < 1; i++) {
+            xhn::garbage_collect_robot* rob = xhn::garbage_collect_robot::get();
+            if (rob)
+			    rob->DoAction();
+		}
+**/
 		xhn::TestObjectHandle handle;
-		handle = GC_ALLOC(xhn::TestObject);
-		handle->handle0 = GC_ALLOC(int);
-		handle->handle1 = GC_ALLOC(int);
+		handle = GC_ALLOC(xhn::TestObject, "TestObject");
+		handle->handle0 = GC_ALLOC(int, "Handle0");
+		handle->handle1 = GC_ALLOC(int, "Handle1");
 		*handle->handle0 = 100;
 		*handle->handle1 = 200;
-		handle->handle2 = GC_ALLOC(float);
+		handle->handle2 = GC_ALLOC(float, "Handle2");
 		*handle->handle2 = (float)(*handle->handle0 + *handle->handle1);
 		handle->hh = handle;
+         /**
 		count++;
 		if (count > 10000)
 		{
@@ -100,13 +112,14 @@ int main(void)
 			count = 0;
 		}
 		**/
+        
         ///printf("\n############\n");
 		ListHandle list;
         ///list.SetListener(&s_MemHandleListenerXX);
 		ListNodeHandle iter;
 		list = GC_ALLOC(List, "TestedList");
 		list->Test();
-		list->PushBack(1);
+        list->PushBack(1);
 		list->Test();
 		list->PushBack(2);
 		list->Test();
@@ -122,7 +135,7 @@ int main(void)
 		list->Print();
 		list->Test();
 /**
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 200; i++) {
 			xhn::garbage_collect_robot::get()->DoAction();
 		}
  **/

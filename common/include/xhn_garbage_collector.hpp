@@ -221,7 +221,7 @@ public:
 			if (!node->TrackBack()) {
                 vptr ptr = node->begin_addr;
                 if (node == head) { head = node->next; }
-                if (node == tail) { tail = node->next; }
+                if (node == tail) { tail = node->prev; }
                 if (node->prev)   { node->prev->next = node->next; }
                 if (node->next)   { node->next->prev = node->prev; }
                 node = node->prev;
