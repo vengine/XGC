@@ -19,7 +19,8 @@
 #include "rwbuffer.h"
 
 namespace xhn
-{    
+{
+    typedef void (*destructor) (void*);
     class mem_btree_node : public MemObject
     {
 	public:
@@ -56,6 +57,7 @@ namespace xhn
 		mem_btree_node* prev;
 		mem_btree_node* next;
         const char* name;
+        destructor dest;
     public:
         mem_btree_node()
         : section(0)
@@ -67,6 +69,7 @@ namespace xhn
 		, prev( NULL )
 		, next( NULL )
         , name( NULL )
+        , dest( NULL )
         {
             memset(children, 0, sizeof(children));
         }
@@ -153,7 +156,7 @@ namespace xhn
         {
             root = ENEW mem_btree_node();
         }
-        void insert(const vptr ptr, euint size, const char* name) {
+        void insert(const vptr ptr, euint size, const char* name, destructor dest) {
 			bool added = false;
             mem_btree_node* track_buffer[sizeof(ptr) * 2 + 1];
             mem_btree_node* node = root;
@@ -180,6 +183,7 @@ namespace xhn
             }
             track_buffer[0] = node;
             node->name = name;
+            node->dest = dest;
             node->begin_addr = ptr;
             node->end_addr = (vptr)((ref_ptr)ptr + size);
             for (euint i = 1; i < num_bytes * 2 + 1; i++) {
@@ -203,6 +207,9 @@ namespace xhn
 			///if (node->prev) { node->prev->next = node->next; }
 			///if (node->next) { node->next->prev = node->prev; }
             track_buffer[0] = node;
+            if (node->dest) {
+                //node->dest(node->begin_addr);
+            }
             for (euint i = 1; i < num_bytes * 2 + 1; i++) {
                 mem_btree_node* next = track_buffer[i];
                 mem_btree_node* prev = track_buffer[i - 1];

@@ -20,6 +20,9 @@ struct TestObject
     IntHandle handle1;
 	FloatHandle handle2;
     garbage_collector::MemHandle<TestObject> hh;
+    ~TestObject() {
+        printf("here\n");
+    }
 };
 typedef garbage_collector::MemHandle<TestObject> TestObjectHandle;
 }

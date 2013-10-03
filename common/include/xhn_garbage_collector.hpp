@@ -18,11 +18,13 @@ public:
 	vptr mem;
 	euint size;
     const char* name;
+    destructor dest;
 public:
-    mem_create_command(vptr m, euint s, const char* n)
+    mem_create_command(vptr m, euint s, const char* n, destructor d)
     : mem(m)
     , size(s)
     , name(n)
+    , dest(d)
 	{}
 	virtual bool Test(Robot* exeRob) { return true; }
 	virtual void Do(Robot* exeRob, xhn::static_string sender);
@@ -79,7 +81,7 @@ public:
     : m_count(0)
     , head(NULL)
     , tail(NULL)
-    , m_isDebugging(false)
+    , m_isDebugging(true)
 	{
 		s_garbage_collect_robot = this;
 	}
@@ -89,8 +91,8 @@ public:
 	static garbage_collect_robot* get() {
 		return s_garbage_collect_robot;
 	}
-	void insert ( const vptr p, euint s, const char* n ) {
-		m_btree.insert((vptr)p, s, n);
+	void insert ( const vptr p, euint s, const char* n, destructor d ) {
+		m_btree.insert((vptr)p, s, n, d);
 	}
 	void remove ( const vptr p ) {
 		if (m_btree.remove((vptr)p)) {
@@ -241,10 +243,16 @@ class sender_robot : public Robot
 {
     DeclareRTTI;
 public:
-	void create ( const vptr mem, euint size, const char* name );
+	void create ( const vptr mem, euint size, const char* name, destructor dest );
 	void attach ( const vptr section, vptr mem );
 	void detach ( const vptr section, vptr mem );
 	virtual xhn::static_string GetName() { return COMMAND_SENDER; }
+};
+    
+template <class T>
+void gc_destructor(T* ptr)
+{
+    ptr->T::~T();
 };
 
 class garbage_collector : public MemObject
@@ -342,14 +350,18 @@ private:
 private:
 	garbage_collector();
 	~garbage_collector();
-	vptr alloc(euint size, const char* _file, euint32 _line, const char* _name);
+	vptr alloc(euint size,
+               const char* _file,
+               euint32 _line,
+               const char* _name,
+               destructor dest);
 	void attach(vptr section, vptr mem);
 	void detach(vptr section, vptr mem);
 public:
 	static garbage_collector* get();
     template <typename T>
     MemHandle<T> alloc(const char* _file, euint32 _line, const char* _name) {
-		vptr ptr = alloc(sizeof(T), _file, _line, _name);
+		vptr ptr = alloc(sizeof(T), _file, _line, _name, (destructor)&gc_destructor<T>);
 		new(ptr) T();
 		return MemHandle<T>((T*)ptr);
 	}
