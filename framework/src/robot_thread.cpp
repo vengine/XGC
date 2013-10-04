@@ -58,6 +58,12 @@ void RobotThread::Run()
 	m_owner->ThreadStoped(this);
 }
 
+bool RobotThread::IsThisThread()
+{
+    pthread_t t = pthread_self();
+    return t == m_thread;
+}
+
 RobotThreadManager* RobotThreadManager::s_RobotThreadManager = NULL;
 void RobotThreadManager::Init()
 {
@@ -74,7 +80,7 @@ void RobotThreadManager::ThreadStoped(RobotThread* thread)
 	m_stopedRobotThreads.push_back(thread);
 }
 
-void RobotThreadManager::AddRobotThread()
+RobotThread* RobotThreadManager::AddRobotThread()
 {
 	xhn::RWLock::Instance inst = m_lock.GetWriteLock();
 	RobotThread* robThd = ENEW RobotThread(this, m_threadCount);
@@ -89,9 +95,10 @@ void RobotThreadManager::AddRobotThread()
 	pthread_attr_destroy(&attr);
 	m_activedRobotThreads.push_back(robThd);
 	m_threadCount++;
+    return robThd;
 }
 
-void RobotThreadManager::AddRobotThread(Robot* rob)
+RobotThread* RobotThreadManager::AddRobotThread(Robot* rob)
 {
 	xhn::RWLock::Instance inst = m_lock.GetWriteLock();
 	RobotThread* robThd = ENEW RobotThread(this, rob, m_threadCount);
@@ -106,6 +113,7 @@ void RobotThreadManager::AddRobotThread(Robot* rob)
 	pthread_attr_destroy(&attr);
 	m_activedRobotThreads.push_back(robThd);
 	m_threadCount++;
+    return robThd;
 }
 
 bool RobotThreadManager::IsAllStoped()

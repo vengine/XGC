@@ -219,3 +219,5 @@ pip-log.txt
 *.db
 
 *.idx
+
+*.plist

@@ -81,7 +81,7 @@ public:
     : m_count(0)
     , head(NULL)
     , tail(NULL)
-    , m_isDebugging(true)
+    , m_isDebugging(false)
 	{
 		s_garbage_collect_robot = this;
 	}
@@ -307,6 +307,8 @@ public:
         {}
         ~MemHandle()
         {
+            if (is_garbage_collect_robot_thread())
+                return;
             if (m_list)
                 m_list->PreDest();
             if (m_isTransfer) {
@@ -342,6 +344,7 @@ public:
     };
 private:
 	static garbage_collector* s_garbage_collector;
+    static RobotThread* s_garbage_collect_robot_thread;
 private:
 	SpinLock m_senderLock;
 	sender_robot* m_sender;
@@ -359,6 +362,7 @@ private:
 	void detach(vptr section, vptr mem);
 public:
 	static garbage_collector* get();
+    static bool is_garbage_collect_robot_thread();
     template <typename T>
     MemHandle<T> alloc(const char* _file, euint32 _line, const char* _name) {
 		vptr ptr = alloc(sizeof(T), _file, _line, _name, (destructor)&gc_destructor<T>);

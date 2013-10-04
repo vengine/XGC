@@ -53,6 +53,7 @@ void xhn::sender_robot::detach ( const vptr section, vptr mem )
 }
 
 xhn::garbage_collector* xhn::garbage_collector::s_garbage_collector = NULL;
+RobotThread* xhn::garbage_collector::s_garbage_collect_robot_thread = NULL;
 
 void* xhn::garbage_collector::garbage_collector_proc(void* gc)
 {
@@ -73,8 +74,10 @@ xhn::garbage_collector::garbage_collector()
 
 	RobotManager::Get()->MakeChannel(COMMAND_SENDER, COMMAND_RECEIVER);
 
-	RobotThreadManager::Init();
-	RobotThreadManager::Get()->AddRobotThread();
+    if (!s_garbage_collect_robot_thread) {
+	    RobotThreadManager::Init();
+	    s_garbage_collect_robot_thread = RobotThreadManager::Get()->AddRobotThread();
+    }
 }
 xhn::garbage_collector::~garbage_collector()
 {}
@@ -113,4 +116,12 @@ xhn::garbage_collector* xhn::garbage_collector::get()
 		s_garbage_collector = ENEW garbage_collector;
 	}
 	return s_garbage_collector;
+}
+
+bool xhn::garbage_collector::is_garbage_collect_robot_thread()
+{
+    if (s_garbage_collect_robot_thread) {
+        return s_garbage_collect_robot_thread->IsThisThread();
+    }
+    return false;
 }

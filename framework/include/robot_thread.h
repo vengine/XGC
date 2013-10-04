@@ -24,8 +24,8 @@ public:
 	RobotThreadManager()
 		: m_threadCount(0)
 	{}
-	void AddRobotThread();
-	void AddRobotThread(Robot* rob);
+	RobotThread* AddRobotThread();
+	RobotThread* AddRobotThread(Robot* rob);
 	void StopAllRobotThread();
 	bool IsAllStoped();
 	static void Init();
@@ -62,5 +62,6 @@ public:
 	inline void Stop() {
 		m_isRunning = false;
 	}
+    bool IsThisThread();
 };
 #endif

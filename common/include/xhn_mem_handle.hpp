@@ -21,7 +21,7 @@ struct TestObject
 	FloatHandle handle2;
     garbage_collector::MemHandle<TestObject> hh;
     ~TestObject() {
-        printf("here\n");
+        ///printf("here\n");
     }
 };
 typedef garbage_collector::MemHandle<TestObject> TestObjectHandle;
