@@ -1,3 +1,13 @@
+/**
+ * xuhaining's Standard Template Library - version 1.0
+ * --------------------------------------------------------
+ * Copyright (C) 2011-2013, by Xu Haining (xhnsworks@gmail.com)
+ * Download new versions at https://github.com/vengine/XGC
+ *
+ * This library is distributed under the MIT License. See notice at the end
+ * of this file.
+ */
+
 #ifndef XHN_GARBAGE_COLLECTOR_H
 #define XHN_GARBAGE_COLLECTOR_H
 #include "common.h"
@@ -257,33 +267,33 @@ void gc_destructor(T* ptr)
 
 class garbage_collector : public MemObject
 {
-	template <typename> friend class MemHandle;
+	template <typename> friend class mem_handle;
 	friend class mem_btree_node;
 public:
-    class MemHandleListener
+    class mem_handle_listener
     {
     public:
-        virtual void PreAssign() = 0;
-        virtual void PreDest() = 0;
+        virtual void pre_assign() = 0;
+        virtual void pre_dest() = 0;
     };
     template <typename T>
-    class MemHandle : public BannedAllocObject
+    class mem_handle : public BannedAllocObject
     {
         friend class garbage_collector;
     private:
         T* m_ptr;
-        MemHandleListener* m_list;
-        bool m_isTransfer;
-        explicit MemHandle(T* ptr)
+        mem_handle_listener* m_list;
+        bool m_is_transfer;
+        explicit mem_handle(T* ptr)
 		: m_ptr(ptr)
         , m_list(NULL)
-        , m_isTransfer(true)
+        , m_is_transfer(true)
         {
         }
-        MemHandle(const MemHandle<T>& ptr)
+        mem_handle(const mem_handle<T>& ptr)
 		: m_ptr((T*)ptr.m_ptr)
         , m_list(NULL)
-        , m_isTransfer(false)
+        , m_is_transfer(false)
         {
             if (m_ptr == ptr.m_ptr)
                 return;
@@ -294,24 +304,22 @@ public:
             garbage_collector::get()->attach((vptr)this, (vptr)ptr.m_ptr);
         }
     public:
-        void SetListener(MemHandleListener* list) {
+        void set_listener(mem_handle_listener* list) {
             m_list = list;
         }
-        bool IsTransfer() {
-            return m_isTransfer;
+        bool is_transfer() {
+            return m_is_transfer;
         }
-        explicit MemHandle()
+        explicit mem_handle()
         : m_ptr(NULL)
         , m_list(NULL)
-        , m_isTransfer(false)
+        , m_is_transfer(false)
         {}
-        ~MemHandle()
+        ~mem_handle()
         {
             if (is_garbage_collect_robot_thread())
                 return;
-            if (m_list)
-                m_list->PreDest();
-            if (m_isTransfer) {
+            if (m_is_transfer) {
                 return;
             }
             if (m_ptr) {
@@ -319,9 +327,7 @@ public:
             }
             m_ptr = NULL;
         }
-        const MemHandle& operator = (const MemHandle& ptr) {
-            if (m_list)
-                m_list->PreAssign();
+        const mem_handle& operator = (const mem_handle& ptr) {
             if (m_ptr == ptr.m_ptr)
                 return *this;
             if (m_ptr) {
@@ -333,13 +339,19 @@ public:
             return *this;
         }
         T* operator ->() {
+            EAssert(m_ptr, "memory handle is NULL");
             return m_ptr;
         }
         T* get() {
+            EAssert(m_ptr, "memory handle is NULL");
             return m_ptr;
         }
         T& operator *() {
+            EAssert(m_ptr, "memory handle is NULL");
             return *m_ptr;
+        }
+        operator bool () const {
+            return (bool)m_ptr;
         }
     };
 private:
@@ -364,13 +376,38 @@ public:
 	static garbage_collector* get();
     static bool is_garbage_collect_robot_thread();
     template <typename T>
-    MemHandle<T> alloc(const char* _file, euint32 _line, const char* _name) {
+    mem_handle<T> alloc(const char* _file, euint32 _line, const char* _name) {
 		vptr ptr = alloc(sizeof(T), _file, _line, _name, (destructor)&gc_destructor<T>);
 		new(ptr) T();
-		return MemHandle<T>((T*)ptr);
+		return mem_handle<T>((T*)ptr);
 	}
 };
 }
 
-#define GC_ALLOC(t, n) xhn::garbage_collector::get()->alloc<t>(__FILE__, __LINE__, n)
+#define GC_ALLOC(t) xhn::garbage_collector::get()->alloc<t>(__FILE__, __LINE__, NULL)
 #endif
+
+/**
+ * Copyright (c) 2011-2013 Xu Haining
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
