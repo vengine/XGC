@@ -503,7 +503,7 @@ void* MemAllocator_alloc(MemAllocator _self, euint _size, bool _is_safe_alloc)
 {
 	char* ret = NULL;
 	alloc_info ainfo = {{NULL}, NULL};
-	refer_info rinfo = {NULL, 0};
+	refer_info rinfo = {NULL, 0, _self.self->test_mark};
 	euint i = 0;
 
 	_size += (ALLOC_INFO_RESERVED + REFER_INFO_RESERVED);

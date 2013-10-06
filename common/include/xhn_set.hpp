@@ -21,29 +21,9 @@
 
 namespace xhn
 {
-template <typename K>
-struct FSetNodeCreateProc {
-	rbtree_node<K> *operator() () {
-		rbtree_node<K> *ret = ( rbtree_node<K> * ) Malloc ( sizeof ( rbtree_node<K> ) );
-		new (ret) rbtree_node<K>();
-		return ret;
-	}
-};
-template <typename K>
-struct FSetNodeDeleteProc {
-	void operator() (rbtree_node<K> * n) {
-		n->~rbtree_node<K>();
-	}
-};
-template <typename K>
-struct FSetNodeFreeProc {
-	void operator() (vptr n) {
-		Mfree ( n );
-	}
-};
 
 template <typename K>
-class FSetNodeAllocProc
+class FSetNodeAllocator
 {
 public:
     typedef euint size_type;
@@ -57,7 +37,7 @@ public:
 	template<typename AK>
 	struct rebind
 	{
-		typedef FSetNodeAllocProc<AK> other;
+		typedef FSetNodeAllocator<AK> other;
 	};
 
 	pointer address(reference v) const
@@ -70,21 +50,21 @@ public:
 		return &v;
 	}
 
-	FSetNodeAllocProc()
+	FSetNodeAllocator()
 	{
 	}
 
-	FSetNodeAllocProc(const FSetNodeAllocProc& rth) 
-	{
-	}
-
-	template<typename AK>
-	FSetNodeAllocProc(const FSetNodeAllocProc<AK>&)
+	FSetNodeAllocator(const FSetNodeAllocator& rth)
 	{
 	}
 
 	template<typename AK>
-	FSetNodeAllocProc<AK>& operator=(const FSetNodeAllocProc<AK>&)
+	FSetNodeAllocator(const FSetNodeAllocator<AK>&)
+	{
+	}
+
+	template<typename AK>
+	FSetNodeAllocator<AK>& operator=(const FSetNodeAllocator<AK>&)
 	{
 		return (*this);
 	}
@@ -126,13 +106,13 @@ public:
 
 template< typename K, 
           typename LessProc = FLessProc<K>, 
-          typename NodeAllocproc = FSetNodeAllocProc<K> >
+          typename NodeAllocator = FSetNodeAllocator<K> >
 class set : public RefObject
 {
 private:
-    rbtree<K, K, LessProc, NodeAllocproc> m_rbtree;
+    rbtree<K, K, LessProc, NodeAllocator> m_rbtree;
 public:
-    typedef rbtree<K, K, LessProc, NodeAllocproc> rbtree_type;
+    typedef rbtree<K, K, LessProc, NodeAllocator> rbtree_type;
     typedef rbtree_node<K> rbnode_type;
     template<typename T>
     struct FReadProc {

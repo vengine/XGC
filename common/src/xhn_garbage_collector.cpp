@@ -14,6 +14,7 @@
 ImplementRTTI(xhn::mem_create_command, RobotCommand);
 ImplementRTTI(xhn::mem_attatch_command, RobotCommand);
 ImplementRTTI(xhn::mem_detach_command, RobotCommand);
+ImplementRTTI(xhn::scan_orphan_node_action, Action);
 ImplementRTTI(xhn::scan_mem_node_action, Action);
 ImplementRTTI(xhn::garbage_collect_robot, Robot);
 ImplementRTTI(xhn::sender_robot, Robot);
@@ -36,6 +37,12 @@ void xhn::mem_detach_command::Do(Robot* exeRob, xhn::static_string sender)
 	gcRobot->detach(section, mem);
 }
 
+void xhn::scan_orphan_node_action::DoImpl()
+{
+    garbage_collect_robot::get()->scan_orphan_nodes(garbage_collect_robot::get()->command_count);
+    garbage_collect_robot::get()->command_count = 0;
+}
+
 void xhn::scan_mem_node_action::DoImpl()
 {
 	garbage_collect_robot::get()->scan_detach_nodes();
@@ -44,6 +51,7 @@ void xhn::scan_mem_node_action::DoImpl()
 void xhn::garbage_collect_robot::CommandProcImpl(xhn::static_string sender, RobotCommand* command)
 {
     command->Do(this, sender);
+    command_count++;
 }
 
 void xhn::sender_robot::create ( const vptr mem, euint size, const char* name, destructor dest )
@@ -76,11 +84,13 @@ xhn::garbage_collector::garbage_collector()
 
 	RobotManager::Init();
 
-	scan_mem_node_action* act = ENEW scan_mem_node_action;
+    scan_orphan_node_action* sona = ENEW scan_orphan_node_action;
+	scan_mem_node_action* smna = ENEW scan_mem_node_action;
 
 	garbage_collect_robot* gc_rob = RobotManager::Get()->AddRobot<garbage_collect_robot>();
 	m_sender = RobotManager::Get()->AddRobot<sender_robot>();
-	gc_rob->AddAction(act);
+    gc_rob->AddAction(sona);
+	gc_rob->AddAction(smna);
 
 	RobotManager::Get()->MakeChannel(COMMAND_SENDER, COMMAND_RECEIVER);
 
@@ -97,13 +107,11 @@ vptr xhn::garbage_collector::alloc(euint size,
                                    const char* _name,
                                    destructor dest)
 {
-    vptr ret = SMalloc(size);
+    ///vptr ret = SMalloc(size);
+    vptr ret = garbage_collect_robot::get()->alloc(size);
 	if (ret) {
 		SpinLock::Instance inst = m_senderLock.Lock();
 		m_sender->create(ret, size, _name, dest);
-	}
-	else {
-		printf("here\n");
 	}
 	return ret;
 }

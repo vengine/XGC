@@ -3,14 +3,19 @@
 
 #include "xhn_garbage_collector.hpp"
 #include "xhn_mem_handle.hpp"
+class ListNode;
+typedef xhn::garbage_collector::mem_handle<ListNode> ListNodeHandle;
 class ListNode
 {
 public:
-    xhn::garbage_collector::mem_handle<ListNode> m_prev;
-	xhn::garbage_collector::mem_handle<ListNode> m_next;
+    ListNodeHandle m_prev;
+	ListNodeHandle m_next;
 	int m_value;
 	ListNode()
 	{
+    }
+    const ListNodeHandle& Next() {
+        return m_next;
     }
 	void Erase() {
 		if (m_next) { m_next->m_prev = m_prev; }
@@ -18,7 +23,6 @@ public:
 	}
 };
 
-typedef xhn::garbage_collector::mem_handle<ListNode> ListNodeHandle;
 class List
 {
 public:
@@ -26,18 +30,16 @@ public:
 	ListNodeHandle m_tail;
 public:
 	void PushBack(int value) {
-        ///snprintf(mbuf, 255, "PushedNode_value_%d", value);
-        ///xhn::static_string str(mbuf);
         ListNodeHandle node;
 		node = GC_ALLOC(ListNode);
 		node->m_value = value;
 		if (m_tail) {
             m_tail->m_next = node;
+            node->m_prev = m_tail;
 			m_tail = node;
 		}
 		else {
 			m_head = m_tail = node;
-            ///printf("%llx\n", m_head->m_next.get());
 		}
 	}
     const ListNodeHandle& Begin() {
@@ -47,7 +49,7 @@ public:
 		ListNodeHandle node;
 		node = m_head;
 		while(node) {
-			///printf("##%d\n", node->m_value);
+			printf("##%d\n", node->m_value);
 			node = node->m_next;
 		}
 	}
@@ -55,6 +57,9 @@ public:
 typedef xhn::garbage_collector::mem_handle<List> ListHandle;
 int main(void)
 {
+    xhn::IntHandle intHandle;
+    intHandle = GC_ALLOC(int);
+    *intHandle = 0;
 	///int count = 0;
 	while (1)
 	{
@@ -70,14 +75,18 @@ int main(void)
 
 		ListHandle list;
 		ListNodeHandle iter;
+        GC_ALLOC(List);
 		list = GC_ALLOC(List);
         list->PushBack(1);
 		list->PushBack(2);
         list->PushBack(3);
 		list->PushBack(4);
 		iter = list->Begin();
+        iter = iter->Next();
 		iter->Erase();
 		list->Print();
+        (*intHandle)++;
+        printf("count %d\n", *intHandle);
 	}
 	while(1) {
 		

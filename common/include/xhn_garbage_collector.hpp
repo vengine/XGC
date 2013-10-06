@@ -67,6 +67,13 @@ public:
 	virtual bool Test(Robot* exeRob) { return true; }
 	virtual void Do(Robot* exeRob, xhn::static_string sender);
 };
+    
+class scan_orphan_node_action : public Action
+{
+    DeclareRTTI;
+public:
+    virtual void DoImpl();
+};
 
 class scan_mem_node_action : public Action
 {
@@ -81,38 +88,42 @@ class garbage_collect_robot : public Robot
 public:
 	static garbage_collect_robot* s_garbage_collect_robot;
 public:
+    MemAllocator m_mem_allocator;
 	mem_btree m_btree;
+    mem_btree_node* orphan;
 	mem_btree_node* head;
 	mem_btree_node* tail;
-	euint m_count;
+    esint32 command_count;
     bool m_isDebugging;
 public:
     garbage_collect_robot()
-    : m_count(0)
+    : orphan(NULL)
     , head(NULL)
     , tail(NULL)
+    , command_count(0)
     , m_isDebugging(false)
 	{
 		s_garbage_collect_robot = this;
+        m_mem_allocator = MemAllocator_new();
 	}
 	~garbage_collect_robot() 
 	{
+        MemAllocator_delete(m_mem_allocator);
 	}
 	static garbage_collect_robot* get() {
 		return s_garbage_collect_robot;
 	}
+    vptr alloc ( euint size ) {
+        return MemAllocator_alloc(m_mem_allocator, size, false);
+    }
 	void insert ( const vptr p, euint s, const char* n, destructor d ) {
-		m_btree.insert((vptr)p, s, n, d);
+		mem_btree_node* node = m_btree.insert((vptr)p, s, n, d);
+        push_orphan_node(node);
 	}
 	void remove ( const vptr p ) {
 		if (m_btree.remove((vptr)p)) {
-			Mfree(p);
+            MemAllocator_free(m_mem_allocator, p);
 		}
-		/**
-		m_count++;
-		if (m_count > 10000)
-		    printf("size %d\n", m_btree.size());
-		**/
 	}
 	void attach ( const vptr section, vptr mem ) {
 		mem_btree_node* node = m_btree.find(mem);
@@ -213,12 +224,21 @@ public:
 			}
 		}
 	}
+    void push_orphan_node(mem_btree_node* node) {
+        if (orphan) {
+            orphan->prev = node;
+        }
+        node->next = orphan;
+        node->prev = NULL;
+        orphan = node;
+    }
 	void push_detach_node(mem_btree_node* node) {
 		if (node == tail)
 			return;
-		if (node == head) { head = node->next; }
-		if (node->prev)   { node->prev->next = node->next; }
-		if (node->next)   { node->next->prev = node->prev; }
+        if (node == orphan) { orphan = node->next; }
+		if (node == head)   { head = node->next; }
+		if (node->prev)     { node->prev->next = node->next; }
+		if (node->next)     { node->next->prev = node->prev; }
 		node->next = NULL;
 		node->prev = tail;
         if (tail)
@@ -227,6 +247,19 @@ public:
 		if (!head)
 			head = node;
 	}
+    void scan_orphan_nodes(esint32 num_cmds) {
+        mem_btree_node* node = orphan;
+        while (node) {
+            node->orphan_count -= num_cmds;
+            if (node->orphan_count <= 0) {
+                mem_btree_node* tmp = node->next;
+                push_detach_node(node);
+                node = tmp;
+            }
+            else
+                node = node->next;
+        }
+    }
 	void scan_detach_nodes() {
 		mem_btree_node* node = tail;
 		while (node) {

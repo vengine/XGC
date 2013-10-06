@@ -23,30 +23,9 @@
 
 namespace xhn
 {
-template<typename K, typename V>
-struct FMapNodeCreateProc {
-	rbtree_node<K> *operator() () {
-		pair<K, V> *ret = ( pair<K, V> * ) Malloc ( sizeof ( pair<K, V> ) );
-		new (ret) pair<K, V>();
-		return ret;
-	}
-};
-template<typename K, typename V>
-struct FMapNodeDeleteProc {
-	void operator() (rbtree_node<K> * n) {
-		pair<K, V> *p = static_cast<pair<K, V> *>(n);
-		p->~pair<K, V>();
-	}
-};
-template<typename K, typename V>
-struct FMapNodeFreeProc {
-	void operator() (vptr n) {
-		Mfree ( n );
-	}
-};
 
 template <typename K, typename V>
-class FMapNodeAllocProc
+class FMapNodeAllocator
 {
 public:
     typedef euint size_type;
@@ -60,7 +39,7 @@ public:
 	template<typename AK, typename AV>
 	struct rebind
 	{
-		typedef FMapNodeAllocProc<AK, AV> other;
+		typedef FMapNodeAllocator<AK, AV> other;
 	};
 
 	pointer address(reference v) const
@@ -73,21 +52,21 @@ public:
 		return &v;
 	}
 
-	FMapNodeAllocProc()
+	FMapNodeAllocator()
 	{
 	}
 
-	FMapNodeAllocProc(const FMapNodeAllocProc& rth) 
-	{
-	}
-
-	template<typename AK, typename AV>
-	FMapNodeAllocProc(const FMapNodeAllocProc<AK, AV>&)
+	FMapNodeAllocator(const FMapNodeAllocator& rth)
 	{
 	}
 
 	template<typename AK, typename AV>
-	FMapNodeAllocProc<AK, AV>& operator=(const FMapNodeAllocProc<AK, AV>&)
+	FMapNodeAllocator(const FMapNodeAllocator<AK, AV>&)
+	{
+	}
+
+	template<typename AK, typename AV>
+	FMapNodeAllocator<AK, AV>& operator=(const FMapNodeAllocator<AK, AV>&)
 	{
 		return (*this);
 	}
@@ -130,14 +109,14 @@ public:
 template< typename K, 
           typename V, 
 		  typename LessProc = FLessProc<K>, 
-		  typename NodeAllocproc = FMapNodeAllocProc<K, V> >
+		  typename NodeAllocator = FMapNodeAllocator<K, V> >
 class map : public RefObject
 {
 private:
 
-    rbtree<K, V, LessProc, NodeAllocproc> m_rbtree;
+    rbtree<K, V, LessProc, NodeAllocator> m_rbtree;
 public:
-    typedef rbtree<K, V, LessProc, NodeAllocproc> rbtree_type;
+    typedef rbtree<K, V, LessProc, NodeAllocator> rbtree_type;
     typedef pair<K, V> rbnode_type;
     template<typename T>
     struct FReadProc {

@@ -21,7 +21,7 @@ struct FSpecProc
 {
 	bool operator () (rbtree_node<K>* node) const { return false; }
 };
-template<typename K, typename V, typename Lessproc, typename NodeAllocproc, typename NodeSpecproc = FSpecProc<K> >
+template<typename K, typename V, typename Lessproc, typename NodeAllocator, typename NodeSpecproc = FSpecProc<K> >
 class rbtree
 {
 public:
@@ -30,7 +30,7 @@ public:
     rbtree_node<K> *tail;
     euint count;
 
-	NodeAllocproc nodeAllocProc;
+	NodeAllocator nodeAllocator;
 	Lessproc lessProc;
 	NodeSpecproc specProc;
 
@@ -54,8 +54,8 @@ public:
         while ( node ) {
             rbtree_node<K> *tmp = NULL;
             tmp = node->iter_next;
-			nodeAllocProc.destroy(node);
-            nodeAllocProc.deallocate ( node, 0 );
+			nodeAllocator.destroy(node);
+            nodeAllocator.deallocate ( node, 0 );
             node = tmp;
         }
 
@@ -398,8 +398,8 @@ public:
                 _tree->count = 0;
 				///_tree->nodeDeleteProc(old);
                 ///_tree->nodeFreeProc ( old );
-				_tree->nodeAllocProc.destroy(old);
-				_tree->nodeAllocProc.deallocate(old, 0);
+				_tree->nodeAllocator.destroy(old);
+				_tree->nodeAllocator.deallocate(old, 0);
                 return 1;
             }
         }
@@ -408,8 +408,8 @@ public:
 
         ///_tree->nodeDeleteProc(old);
         ///_tree->nodeFreeProc ( old );
-		_tree->nodeAllocProc.destroy(old);
-		_tree->nodeAllocProc.deallocate(old, 0);
+		_tree->nodeAllocator.destroy(old);
+		_tree->nodeAllocator.deallocate(old, 0);
 
         if ( color == Black ) {
             root = _remove_rebalance ( child, parent, root );
@@ -435,8 +435,8 @@ public:
         if ( unlikely ( !_tree->root ) ) {
             if ( is_force ) {
                 ///_tree->root = _tree->head = _tree->tail = _tree->nodeCreateProc();
-				rbtree_node<K> *n = _tree->root = _tree->head = _tree->tail = _tree->nodeAllocProc.allocate(1);
-				_tree->nodeAllocProc.construct(n);
+				rbtree_node<K> *n = _tree->root = _tree->head = _tree->tail = _tree->nodeAllocator.allocate(1);
+				_tree->nodeAllocator.construct(n);
                 tree_node_Init ( _tree, _tree->root, key );
                 _tree->count = 1;
                 return _tree->root;
@@ -455,8 +455,8 @@ public:
             }
         }
 
-        node = _tree->nodeAllocProc.allocate(1);
-		_tree->nodeAllocProc.construct(node);
+        node = _tree->nodeAllocator.allocate(1);
+		_tree->nodeAllocator.construct(node);
         tree_node_Init ( _tree, node, key );
         node->parent_node = parent;
         node->left_node = node->right_node = NULL;

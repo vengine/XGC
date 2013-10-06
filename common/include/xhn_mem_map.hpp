@@ -67,6 +67,7 @@ namespace xhn
 		mem_btree_node* prev;
 		mem_btree_node* next;
         const char* name;
+        esint32 orphan_count;
         destructor dest;
     public:
         mem_btree_node()
@@ -79,6 +80,7 @@ namespace xhn
 		, prev( NULL )
 		, next( NULL )
         , name( NULL )
+        , orphan_count( 100 )
         , dest( NULL )
         {
             memset(children, 0, sizeof(children));
@@ -166,7 +168,7 @@ namespace xhn
         {
             root = ENEW mem_btree_node();
         }
-        void insert(const vptr ptr, euint size, const char* name, destructor dest) {
+        mem_btree_node* insert(const vptr ptr, euint size, const char* name, destructor dest) {
 			bool added = false;
             mem_btree_node* track_buffer[sizeof(ptr) * 2 + 1];
             mem_btree_node* node = root;
@@ -201,7 +203,11 @@ namespace xhn
             }
 			if (added) {
 				count++;
+                return node;
 			}
+            else {
+                return NULL;
+            }
         }
         bool remove(const vptr ptr) {
             mem_btree_node* track_buffer[sizeof(ptr) * 2 + 1];
