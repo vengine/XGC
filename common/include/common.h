@@ -171,11 +171,13 @@ or
 
 #    ifdef _WIN32
 #        include <pthread.h>
+#        include <pthread_clock.h>
 #        include <windows.h>
 #        define BIT_WIDTH 32
 
 #    elif defined (_WIN64)
 #        include <pthread.h>
+#        include <pthread_clock.h>
 #        include <windows.h>
 #        define BIT_WIDTH 64
 

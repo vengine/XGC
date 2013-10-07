@@ -1,0 +1,59 @@
+/*
+ * Copyright (c) 2011, Dongsheng Song <songdongsheng@live.cn>
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <winver.h>
+
+#define PT4W_VERSION 0,1,0,0
+#define PT4W_VERSION_STRING "0, 1, 0, 0\0"
+
+#if defined(_MSC_VER)
+    #define PT4W_VERSIONINFO_COMMENT "POSIX thread for Windows - Microsoft C/C++ build\0"
+#elif defined(__GNUC__)
+    #define PT4W_VERSIONINFO_COMMENT "POSIX thread for Windows - GNU C build\0"
+#else
+    #define PT4W_VERSIONINFO_COMMENT "POSIX thread for Windows\0"
+#endif
+
+VS_VERSION_INFO VERSIONINFO
+  FILEVERSION    PT4W_VERSION
+  PRODUCTVERSION PT4W_VERSION
+  FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK
+  FILEFLAGS      0
+  FILEOS         VOS__WINDOWS32
+  FILETYPE       VFT_DLL
+  FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "ProductName", PT4W_VERSIONINFO_COMMENT
+            VALUE "FileDescription", PT4W_VERSIONINFO_COMMENT
+            VALUE "ProductVersion", PT4W_VERSION_STRING
+            VALUE "FileVersion", PT4W_VERSION_STRING
+            VALUE "InternalName", "libpthread.dll\0"
+            VALUE "OriginalFilename", "libpthread.dll\0"
+            VALUE "LegalCopyright", "Copyright 2011, Dongsheng Song.\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

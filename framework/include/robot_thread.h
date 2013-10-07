@@ -17,6 +17,20 @@
 #include "robot.h"
 #include "emem.hpp"
 #include "xhn_lock.hpp"
+struct ThreadStackRange
+{
+    vptr begin_addr;
+    euint size;
+    ThreadStackRange()
+    : begin_addr(NULL)
+    , size(0)
+    {}
+    bool IsInStackRange(vptr addr) {
+        /// 这是递减堆栈的算法
+        return (ref_ptr)addr <= (ref_ptr)begin_addr &&
+        (ref_ptr)addr >= (ref_ptr)begin_addr - (ref_ptr)size;
+    }
+};
 class RobotThread;
 class RobotThreadManager : public MemObject
 {
@@ -46,12 +60,15 @@ class RobotThread : public MemObject
 {
 public:
 	pthread_t m_thread;
+    pthread_attr_t m_attr;
 	xhn::SmartPtr< xhn::list<xhn::static_string> > m_dispatchQueue;
 	Robot* m_curtActivedRobot;
 	bool m_isRunning;
 	bool m_isPolling;
 	RobotThreadManager* m_owner;
+    ThreadStackRange m_stackRange;
 	int m_id;
+    long m_sleepNanosecond;
 public:
 	RobotThread(RobotThreadManager* owner, int id)
 		: m_curtActivedRobot(NULL)
@@ -59,6 +76,7 @@ public:
 		, m_isPolling(true)
 		, m_owner(owner)
 		, m_id(id)
+        , m_sleepNanosecond(0)
 	{}
 	RobotThread(RobotThreadManager* owner, Robot* rob, int id)
 		: m_curtActivedRobot(rob)
@@ -66,6 +84,7 @@ public:
 		, m_isPolling(false)
 		, m_owner(owner)
 		, m_id(id)
+        , m_sleepNanosecond(0)
 	{}
 	static void* Execute(void *_robThd);
 	void Run();
@@ -73,6 +92,9 @@ public:
 		m_isRunning = false;
 	}
     bool IsThisThread();
+    inline void SetSleepNanoSecond(long nanosecond) {
+        m_sleepNanosecond = nanosecond;
+    }
 };
 #endif
 

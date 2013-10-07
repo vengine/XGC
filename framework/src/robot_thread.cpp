@@ -13,8 +13,18 @@
 ///#include "render_system.h"
 void* RobotThread::Execute(void *_robThd)
 {
+    int tmp = 0;
+    vptr addr = (vptr)&tmp;
+    int ret;
+    size_t size;
 	RobotThread* robThd = (RobotThread*)_robThd;
+    ret = pthread_attr_getstacksize(&robThd->m_attr, &size);
+    robThd->m_stackRange.begin_addr = addr;
+    robThd->m_stackRange.size = size;
 	robThd->Run();
+    if (robThd->m_stackRange.begin_addr) {
+        Mfree(robThd->m_stackRange.begin_addr);
+    }
 	delete robThd;
 	return NULL;
 }
@@ -64,14 +74,31 @@ void RobotThread::Run()
 		else {
 			m_curtActivedRobot->DoAction();
 		}
+        if (m_sleepNanosecond) {
+            struct timespec t;
+            t.tv_nsec = m_sleepNanosecond;
+            t.tv_sec = 0;
+            nanosleep(&t, NULL);
+        }
 	}
 	m_owner->ThreadStoped(this);
 }
 
 bool RobotThread::IsThisThread()
 {
+    int tmp = 0;
+    vptr addr = &tmp;
+    bool ret = m_stackRange.IsInStackRange(addr);
+    return ret;
+    /**
     pthread_t t = pthread_self();
-    return t == m_thread;
+    ///return t == m_thread;
+    bool ret2 = (t == m_thread);
+    if (ret2)
+        return true;
+    else
+        return false;
+    **/
 }
 
 RobotThreadManager* RobotThreadManager::s_RobotThreadManager = NULL;
@@ -94,15 +121,17 @@ RobotThread* RobotThreadManager::AddRobotThread()
 {
 	xhn::RWLock::Instance inst = m_lock.GetWriteLock();
 	RobotThread* robThd = ENEW RobotThread(this, m_threadCount);
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	pthread_attr_setstacksize(&attr, 1024);
+	pthread_attr_init(&robThd->m_attr);
+	pthread_attr_setdetachstate(&robThd->m_attr, PTHREAD_CREATE_DETACHED);
+    int ret;
+    int stackSize = PTHREAD_STACK_MIN + 1024 * 1024 * 1024;
+    ret = pthread_attr_setstacksize(&robThd->m_attr, stackSize);
 	pthread_create(&robThd->m_thread,
-                   NULL,
+                   &robThd->m_attr,
                    RobotThread::Execute,
                    (void *) robThd);
-	pthread_attr_destroy(&attr);
+    
+	///pthread_attr_destroy(&attr);
 	m_activedRobotThreads.push_back(robThd);
 	m_threadCount++;
     return robThd;
@@ -112,15 +141,16 @@ RobotThread* RobotThreadManager::AddRobotThread(Robot* rob)
 {
 	xhn::RWLock::Instance inst = m_lock.GetWriteLock();
 	RobotThread* robThd = ENEW RobotThread(this, rob, m_threadCount);
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	pthread_attr_setstacksize(&attr, 1024);
+	pthread_attr_init(&robThd->m_attr);
+	pthread_attr_setdetachstate(&robThd->m_attr, PTHREAD_CREATE_DETACHED);
+    int ret;
+    int stackSize = PTHREAD_STACK_MIN + 1024 * 1024 * 1024;
+    ret = pthread_attr_setstacksize(&robThd->m_attr, stackSize);
 	pthread_create(&robThd->m_thread,
-		NULL,
-		RobotThread::Execute,
-		(void *) robThd);
-	pthread_attr_destroy(&attr);
+		           &robThd->m_attr,
+		           RobotThread::Execute,
+		           (void *) robThd);
+	///pthread_attr_destroy(&attr);
 	m_activedRobotThreads.push_back(robThd);
 	m_threadCount++;
     return robThd;

@@ -45,7 +45,11 @@ void xhn::scan_orphan_node_action::DoImpl()
 
 void xhn::scan_mem_node_action::DoImpl()
 {
-	garbage_collect_robot::get()->scan_detach_nodes();
+    m_doCount++;
+    if (m_doCount > 10000) {
+	    garbage_collect_robot::get()->scan_detach_nodes();
+        m_doCount = 0;
+    }
 }
 
 void xhn::garbage_collect_robot::CommandProcImpl(xhn::static_string sender, RobotCommand* command)
@@ -97,6 +101,7 @@ xhn::garbage_collector::garbage_collector()
     if (!s_garbage_collect_robot_thread) {
 	    RobotThreadManager::Init();
 	    s_garbage_collect_robot_thread = RobotThreadManager::Get()->AddRobotThread();
+        s_garbage_collect_robot_thread->SetSleepNanoSecond(0);
     }
 }
 xhn::garbage_collector::~garbage_collector()

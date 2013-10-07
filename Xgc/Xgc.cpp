@@ -84,12 +84,9 @@ int main(void)
 		iter = list->Begin();
         iter = iter->Next();
 		iter->Erase();
-		list->Print();
+		///list->Print();
         (*intHandle)++;
         printf("count %d\n", *intHandle);
-	}
-	while(1) {
-		
-	}
+    }
 	return 0;
 }

@@ -1,0 +1,24 @@
+    POSIX thread library for windows XP/2003 or later
+
+== Goals
+  * Simple
+  * Performance
+  * Because these 2 above goals, libpthread will not completely
+    conform to POSIX standard, only provide a reasonable behavior.
+
+== Source
+  * Web View: http://github.com/songdongsheng/libpthread
+  * git clone git://github.com/songdongsheng/libpthread.git
+
+or
+
+  * Web View: http://code.google.com/p/libpthread/source/browse/
+  * git clone https://code.google.com/p/libpthread
+
+== Requirements
+Following programs are requred to build:
+  - CMake 2.8 or later
+
+  - The source files can only be compiled by MSVC or GCC:
+    * Microsoft Visual C++ 2008 or later
+    * MinGW-w64 gcc 4.6 or later
