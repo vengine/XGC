@@ -1,0 +1,280 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{0eacec2d-26b4-4620-91d7-ffe26fe0d903}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\include">
+      <UniqueIdentifier>{3dfc5c6a-11fe-41f5-9396-38d7ba1b99ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\src">
+      <UniqueIdentifier>{525db240-1bd7-455f-b1fb-d8f4f6b78ad4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\lib">
+      <UniqueIdentifier>{81a628dd-032b-4812-84bf-47ab7b7e500a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="framework">
+      <UniqueIdentifier>{05f3e39b-330f-46ef-90e5-5db61dc278c5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Xgc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\eassert.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\elog.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\emem.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\emem2.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\estring.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\exception.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\gc_test.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\golden_cudgel.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\hash.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\list.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\path.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\pch.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\resource_node.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\rtti.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\rwbuffer.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\stack.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\tree.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\xhn_exception.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\xhn_garbage_collector.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\xhn_mem_map.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\xhn_static_string.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\xhn_string.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\src\xhn_utility.cpp">
+      <Filter>common\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\framework\src\robot.cpp">
+      <Filter>framework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\framework\src\robot_thread.cpp">
+      <Filter>framework</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\common\include\array.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\common.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\comparison_algorithm.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\container.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\eassert.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\elog.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\emem.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\emem.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\emem2.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\esignal.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\estring.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\etypes.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\exception.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\gc_test.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\golden_cudgel.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\hash.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\list.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\list_base.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\map.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\mem.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\parser.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\path.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\pch.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\prime.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\resource_node.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\rtti.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\rwbuffer.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\spin_lock.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\stack.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\timer.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\tree.h">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_atomic_operation.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_exception.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_garbage_collector.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_hash_map.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_hash_set.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_iterator.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_list.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_lock.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_map.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_mem_handle.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_mem_map.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_pair.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_rbtree.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_set.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_smart_ptr.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_static_string.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_string.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_string_base.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_test.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_utility.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_vector.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\include\xhn_void_vector.hpp">
+      <Filter>common\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\framework\include\robot.h">
+      <Filter>framework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\framework\include\robot_thread.h">
+      <Filter>framework</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\common\lib\pthreadVC2.lib">
+      <Filter>common\lib</Filter>
+    </Library>
+  </ItemGroup>
+</Project>
