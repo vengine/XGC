@@ -74,12 +74,14 @@ void RobotThread::Run()
 		else {
 			m_curtActivedRobot->DoAction();
 		}
+		/*
         if (m_sleepNanosecond) {
             struct timespec t;
             t.tv_nsec = m_sleepNanosecond;
             t.tv_sec = 0;
             nanosleep(&t, NULL);
         }
+		*/
 	}
 	m_owner->ThreadStoped(this);
 }
@@ -124,7 +126,7 @@ RobotThread* RobotThreadManager::AddRobotThread()
 	pthread_attr_init(&robThd->m_attr);
 	pthread_attr_setdetachstate(&robThd->m_attr, PTHREAD_CREATE_DETACHED);
     int ret;
-    int stackSize = PTHREAD_STACK_MIN + 1024 * 1024 * 1024;
+    int stackSize = 1024 * 1024 * 1024;
     ret = pthread_attr_setstacksize(&robThd->m_attr, stackSize);
 	pthread_create(&robThd->m_thread,
                    &robThd->m_attr,
@@ -144,7 +146,7 @@ RobotThread* RobotThreadManager::AddRobotThread(Robot* rob)
 	pthread_attr_init(&robThd->m_attr);
 	pthread_attr_setdetachstate(&robThd->m_attr, PTHREAD_CREATE_DETACHED);
     int ret;
-    int stackSize = PTHREAD_STACK_MIN + 1024 * 1024 * 1024;
+    int stackSize = 1024 * 1024 * 1024;
     ret = pthread_attr_setstacksize(&robThd->m_attr, stackSize);
 	pthread_create(&robThd->m_thread,
 		           &robThd->m_attr,

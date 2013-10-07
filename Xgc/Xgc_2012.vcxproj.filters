@@ -18,9 +18,6 @@
     <Filter Include="common\src">
       <UniqueIdentifier>{525db240-1bd7-455f-b1fb-d8f4f6b78ad4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="common\lib">
-      <UniqueIdentifier>{81a628dd-032b-4812-84bf-47ab7b7e500a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="framework">
       <UniqueIdentifier>{05f3e39b-330f-46ef-90e5-5db61dc278c5}</UniqueIdentifier>
     </Filter>
@@ -38,16 +35,10 @@
     <ClCompile Include="..\common\src\emem.cpp">
       <Filter>common\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\src\emem2.cpp">
-      <Filter>common\src</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\src\estring.cpp">
       <Filter>common\src</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\exception.cpp">
-      <Filter>common\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\gc_test.cpp">
       <Filter>common\src</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\golden_cudgel.cpp">
@@ -63,9 +54,6 @@
       <Filter>common\src</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\pch.cpp">
-      <Filter>common\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\src\resource_node.cpp">
       <Filter>common\src</Filter>
     </ClCompile>
     <ClCompile Include="..\common\src\rtti.cpp">
@@ -274,7 +262,7 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\common\lib\pthreadVC2.lib">
-      <Filter>common\lib</Filter>
+      <Filter>common</Filter>
     </Library>
   </ItemGroup>
 </Project>
