@@ -11,7 +11,7 @@
 #include "pch.h"
 #include "xhn_mem_map.hpp"
 #include "xhn_garbage_collector.hpp"
-
+/**
 bool xhn::mem_btree_node::_TrackBack(mem_set& trackBuffer)
 {
 	if (root_ref_count)
@@ -62,29 +62,41 @@ bool xhn::mem_btree_node::TrackBack()
 	mem_set trackBuffer;
 	return _TrackBack(trackBuffer);
 }
-
+**/
 void xhn::mem_btree_node::Attach(const vptr handle, mem_btree_node* mem)
 {
     input_pair ip = {this, (vptr)handle};
-	mem->input_map.insert(xhn::make_pair(ip, mem));
+	///mem->input_map.insert(xhn::make_pair(ip, mem));
 	output_map.insert(xhn::make_pair(handle, mem));
 }
 void xhn::mem_btree_node::Detach(const vptr handle, mem_btree_node* mem)
 {
     input_pair ip = {this, (vptr)handle};
 	output_map.erase(handle);
-	mem->input_map.erase(ip);
+	///mem->input_map.erase(ip);
 	garbage_collect_robot::get()->push_detach_node(mem);
 }
 void xhn::mem_btree_node::AttchToRoot() {
-	AtomicIncrement(&root_ref_count);
+	root_ref_count++;
 }
 void xhn::mem_btree_node::DetachFromRoot() {
-	AtomicDecrement(&root_ref_count);
+	root_ref_count--;
 	EAssert(root_ref_count >= 0, "count must greater or equal zero");
 	///TrackBack();
 }
-
+void xhn::mem_btree_node::MakeNotGarbage()
+{
+	if (!is_garbage)
+		return;
+	is_garbage = false;
+	mem_map::iterator iter = output_map.begin();
+	mem_map::iterator end = output_map.end();
+	for (; iter != end; iter++) {
+        mem_btree_node* node = iter->second;
+		node->is_garbage = false;
+		node->MakeNotGarbage();
+	}
+}
 void xhn::mem_btree::push_detach_node(mem_btree_node* node)
 {
     garbage_collect_robot::get()->push_detach_node(node);

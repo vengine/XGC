@@ -230,10 +230,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\common\include\emem2.h"
-					>
-				</File>
-				<File
 					RelativePath="..\common\include\esignal.h"
 					>
 				</File>
@@ -247,14 +243,6 @@
 				</File>
 				<File
 					RelativePath="..\common\include\exception.h"
-					>
-				</File>
-				<File
-					RelativePath="..\common\include\gc_test.h"
-					>
-				</File>
-				<File
-					RelativePath="..\common\include\golden_cudgel.h"
 					>
 				</File>
 				<File
@@ -291,10 +279,6 @@
 				</File>
 				<File
 					RelativePath="..\common\include\prime.h"
-					>
-				</File>
-				<File
-					RelativePath="..\common\include\resource_node.h"
 					>
 				</File>
 				<File
@@ -477,27 +461,6 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\common\src\emem2.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="2"
-							PrecompiledHeaderThrough="pch.h"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PrecompiledHeaderThrough="pch.h"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
 					RelativePath="..\common\src\estring.cpp"
 					>
 					<FileConfiguration
@@ -520,27 +483,6 @@
 				</File>
 				<File
 					RelativePath="..\common\src\exception.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="2"
-							PrecompiledHeaderThrough="pch.h"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PrecompiledHeaderThrough="pch.h"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\common\src\gc_test.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -662,27 +604,6 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="1"
-							PrecompiledHeaderThrough="pch.h"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\common\src\resource_node.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="2"
-							PrecompiledHeaderThrough="pch.h"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
 							PrecompiledHeaderThrough="pch.h"
 						/>
 					</FileConfiguration>

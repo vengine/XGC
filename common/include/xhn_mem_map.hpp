@@ -51,7 +51,7 @@ namespace xhn
                 }
             }
         };
-        typedef map<input_pair, mem_btree_node*> input_mem_map;
+        ///typedef map<input_pair, mem_btree_node*> input_mem_map;
         typedef map<vptr, mem_btree_node*> mem_map;
 		typedef set<mem_btree_node*> mem_set;
     public:
@@ -61,14 +61,17 @@ namespace xhn
         euint32 num_children;
         vptr begin_addr;
         vptr end_addr;
-		input_mem_map input_map;
+		///input_mem_map input_map;
 		mem_map output_map;
-		volatile esint32 root_ref_count;
+		esint32 root_ref_count;
 		mem_btree_node* prev;
 		mem_btree_node* next;
+		mem_btree_node* root_prev;
+		mem_btree_node* root_next;
         const char* name;
         esint32 orphan_count;
         destructor dest;
+		bool is_garbage;
     public:
         mem_btree_node()
         : section(0)
@@ -79,9 +82,12 @@ namespace xhn
 		, root_ref_count(0)
 		, prev( NULL )
 		, next( NULL )
+		, root_prev( NULL )
+		, root_next( NULL )
         , name( NULL )
         , orphan_count( 100 )
         , dest( NULL )
+		, is_garbage(false)
         {
             memset(children, 0, sizeof(children));
         }
@@ -149,12 +155,13 @@ namespace xhn
             }
         }
 
-		bool _TrackBack(mem_set& trackBuffer);
-		bool TrackBack();
+		///bool _TrackBack(mem_set& trackBuffer);
+		///bool TrackBack();
 		void Attach(const vptr handle, mem_btree_node* mem);
 		void Detach(const vptr handle, mem_btree_node* mem);
 		void AttchToRoot();
 		void DetachFromRoot();
+		void MakeNotGarbage();
     };
     
     class mem_btree

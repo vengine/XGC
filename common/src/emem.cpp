@@ -124,12 +124,16 @@ typedef struct _mem_pool_node
     vptr begin;
     vptr end;
     mem_node* head;
+	euint num_chks;
+	euint chk_cnt;
 } mem_pool_node;
 
 mem_pool_node allco_mem_pool_node(euint _chk_size, euint _num_chks)
 {
     mem_pool_node ret;
     ret.mem_list = alloc_mem_list(_chk_size, _num_chks, &ret.real_chk_size, &ret.begin, &ret.end, &ret.head);
+	ret.num_chks = _num_chks;
+	ret.chk_cnt = _num_chks;
     return ret;
 }
 
@@ -172,9 +176,9 @@ bool is_from(mem_pool_node* _node, void* _ptr)
 void* alloc(mem_pool_node* _node, bool _is_safe_alloc)
 {
 	mem_node* ret = _node->head;
-	EAssert(is_from(_node, ret), "invalid memory node!");
 	if(ret)
 	{
+		EAssert(is_from(_node, ret), "invalid memory node!");
 		if (_node->head->next)
 		{
 			EAssert(is_from(_node, ret->next), "invalid memory node!");
@@ -186,6 +190,7 @@ void* alloc(mem_pool_node* _node, bool _is_safe_alloc)
 		}
 		if (_is_safe_alloc)
 		    meminit(ret, _node->real_chk_size);
+		_node->chk_cnt--;
 	}
 	return ret;
 }
@@ -203,6 +208,7 @@ void dealloc(mem_pool_node* _node, void* _ptr)
     else
         n->next = NULL;
     _node->head = n;
+	_node->chk_cnt++;
 }
 
 MemPoolNode MemPoolNode_new(euint _chk_size, euint _num_chks)
@@ -435,7 +441,7 @@ void MemPool_free(MemPool _self,
     var v = List_get_value(_iter);
     MemPoolNode node = {(struct _mem_pool_node*)v.vptr_var};
     MemPoolNode_free(node, _ptr);
-    List_throw_front(SELF.mem_pool_chain, _iter);
+	List_throw_front(SELF.mem_pool_chain, _iter);
 	ELock_unlock(&SELF.elock);
 }
 
@@ -452,6 +458,7 @@ typedef struct _mem_allocator
     MemPool mem_pools[MAX_MEM_POOLS];
 	ELock elock;
     euint32 test_mark;
+	euint alloced_mem_size;
 } mem_allocator;
 
 typedef struct _alloc_info
@@ -485,6 +492,7 @@ MemAllocator MemAllocator_new()
     }
 	ELock_Init(&ret.self->elock);
     ret.self->test_mark = (euint32)rand();
+	ret.self->alloced_mem_size = 0;
 	return ret;
 }
 void MemAllocator_delete(MemAllocator _self)
@@ -516,6 +524,8 @@ void* MemAllocator_alloc(MemAllocator _self, euint _size, bool _is_safe_alloc)
         ret = (char*)MemPool_alloc(mp, &iter, _is_safe_alloc);
 		ainfo.mem_pool = mp;
 		ainfo.iter = iter;
+
+		_self.self->alloced_mem_size += MemPool_chunk_size(mp);
 	}
 	else
 	{
@@ -568,6 +578,8 @@ void MemAllocator_free(MemAllocator _self, void* _ptr)
 	else
 	{
 		MemPool_free(info.mem_pool, info.iter, ptr);
+
+		_self.self->alloced_mem_size -= MemPool_chunk_size(info.mem_pool);
 	}
 }
 void MemAllocator_log(MemAllocator _self)
@@ -600,6 +612,10 @@ bool MemAllocator_check(MemAllocator _self)
 			return false;
 	}
 	return true;
+}
+euint MemAllocator_get_alloced_mem_size(MemAllocator _self)
+{
+	return _self.self->alloced_mem_size;
 }
 
 #if 0

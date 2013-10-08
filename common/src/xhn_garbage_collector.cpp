@@ -26,30 +26,44 @@ void xhn::mem_create_command::Do(Robot* exeRob, xhn::static_string sender)
     garbage_collect_robot* gcRobot = exeRob->DynamicCast<garbage_collect_robot>();
 	gcRobot->insert(mem, size, name, dest);
 }
+euint xhn::mem_create_command::GetSelfSize()
+{
+    return sizeof(mem_create_command);
+}
 void xhn::mem_attatch_command::Do(Robot* exeRob, xhn::static_string sender)
 {
     garbage_collect_robot* gcRobot = exeRob->DynamicCast<garbage_collect_robot>();
 	gcRobot->attach(section, mem);
+}
+euint xhn::mem_attatch_command::GetSelfSize()
+{
+	return sizeof(mem_attatch_command);
 }
 void xhn::mem_detach_command::Do(Robot* exeRob, xhn::static_string sender)
 {
 	garbage_collect_robot* gcRobot = exeRob->DynamicCast<garbage_collect_robot>();
 	gcRobot->detach(section, mem);
 }
+euint xhn::mem_detach_command::GetSelfSize()
+{
+	return sizeof(mem_detach_command);
+}
 
 void xhn::scan_orphan_node_action::DoImpl()
 {
-    garbage_collect_robot::get()->scan_orphan_nodes(garbage_collect_robot::get()->command_count);
-    garbage_collect_robot::get()->command_count = 0;
+	///if (garbage_collect_robot::get()->get_alloced_mem_size() > 5 * 1024 * 1024) 
+	{
+        garbage_collect_robot::get()->scan_orphan_nodes(garbage_collect_robot::get()->command_count);
+        garbage_collect_robot::get()->command_count = 0;
+	}
 }
 
 void xhn::scan_mem_node_action::DoImpl()
 {
-    m_doCount++;
-    if (m_doCount > 10000) {
+	///if (garbage_collect_robot::get()->get_alloced_mem_size() > 5 * 1024 * 1024) 
+	{
 	    garbage_collect_robot::get()->scan_detach_nodes();
-        m_doCount = 0;
-    }
+	}
 }
 
 void xhn::garbage_collect_robot::CommandProcImpl(xhn::static_string sender, RobotCommand* command)
@@ -60,6 +74,7 @@ void xhn::garbage_collect_robot::CommandProcImpl(xhn::static_string sender, Robo
 
 void xhn::sender_robot::create ( const vptr mem, euint size, const char* name, destructor dest )
 {
+<<<<<<< HEAD
     if (!m_channel) {
         m_channel = RobotManager::Get()->GetChannel(GetName(), COMMAND_RECEIVER);
     }
@@ -81,6 +96,23 @@ void xhn::sender_robot::detach ( const vptr section, vptr mem )
     }
 	mem_detach_command* cmd = ENEW mem_detach_command(section, mem);
 	while (!RWBuffer_Write(m_channel, (const euint*)&cmd, sizeof(cmd))) {}
+=======
+	if (!m_channel) { m_channel = RobotManager::Get()->GetChannel(GetName(), COMMAND_RECEIVER); }
+	mem_create_command* cmd = ENEW mem_create_command(mem, size, name, dest);
+	RobotManager::Get()->SendCommand(m_channel, cmd);
+}
+void xhn::sender_robot::attach ( const vptr section, vptr mem )
+{
+	if (!m_channel) { m_channel = RobotManager::Get()->GetChannel(GetName(), COMMAND_RECEIVER); }
+    mem_attatch_command* cmd = ENEW mem_attatch_command(section, mem);
+	RobotManager::Get()->SendCommand(m_channel, cmd);
+}
+void xhn::sender_robot::detach ( const vptr section, vptr mem )
+{
+	if (!m_channel) { m_channel = RobotManager::Get()->GetChannel(GetName(), COMMAND_RECEIVER); }
+	mem_detach_command* cmd = ENEW mem_detach_command(section, mem);
+	RobotManager::Get()->SendCommand(m_channel, cmd);
+>>>>>>> 9735ed6734d02a2d58f7150f6830c45f8ccbe7ad
 }
 
 xhn::garbage_collector* xhn::garbage_collector::s_garbage_collector = NULL;
@@ -121,7 +153,6 @@ vptr xhn::garbage_collector::alloc(euint size,
                                    const char* _name,
                                    destructor dest)
 {
-    ///vptr ret = SMalloc(size);
     vptr ret = garbage_collect_robot::get()->alloc(size);
 	if (ret) {
 		SpinLock::Instance inst = m_senderLock.Lock();
@@ -133,7 +164,7 @@ vptr xhn::garbage_collector::alloc(euint size,
 void xhn::garbage_collector::attach(vptr section, vptr mem)
 {
 	SpinLock::Instance inst = m_senderLock.Lock();
-	m_sender->attach(section, mem);
+    m_sender->attach(section, mem);
 }
 
 void xhn::garbage_collector::detach(vptr section, vptr mem)

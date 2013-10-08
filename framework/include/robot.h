@@ -208,6 +208,7 @@ public:
     Robot* Pop();
     void Push(Robot* rob);
 	void SendCommand(xhn::static_string sender, xhn::static_string receiver, RobotCommand* cmd);
+	void SendCommand(RWBuffer channel, RobotCommand* cmd);
 };
 ///**********************************************************************///
 ///                       class define end                               ///

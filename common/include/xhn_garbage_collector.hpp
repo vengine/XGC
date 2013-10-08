@@ -38,6 +38,7 @@ public:
 	{}
 	virtual bool Test(Robot* exeRob) { return true; }
 	virtual void Do(Robot* exeRob, xhn::static_string sender);
+	virtual euint GetSelfSize();
 };
 class mem_attatch_command : public RobotCommand
 {
@@ -52,6 +53,7 @@ public:
 	{}
 	virtual bool Test(Robot* exeRob) { return true; }
 	virtual void Do(Robot* exeRob, xhn::static_string sender);
+	virtual euint GetSelfSize();
 };
 class mem_detach_command : public RobotCommand
 {
@@ -66,6 +68,7 @@ public:
 	{}
 	virtual bool Test(Robot* exeRob) { return true; }
 	virtual void Do(Robot* exeRob, xhn::static_string sender);
+	virtual euint GetSelfSize();
 };
     
 class scan_orphan_node_action : public Action
@@ -79,10 +82,7 @@ class scan_mem_node_action : public Action
 {
 	DeclareRTTI;
 public:
-    euint32 m_doCount;
-public:
     scan_mem_node_action()
-    : m_doCount(0)
     {}
 	virtual void DoImpl();
 };
@@ -98,6 +98,8 @@ public:
     mem_btree_node* orphan;
 	mem_btree_node* head;
 	mem_btree_node* tail;
+	mem_btree_node* root_head;
+	mem_btree_node* root_tail;
     esint32 command_count;
     bool m_isDebugging;
 public:
@@ -105,6 +107,8 @@ public:
     : orphan(NULL)
     , head(NULL)
     , tail(NULL)
+	, root_head(NULL)
+	, root_tail(NULL)
     , command_count(0)
     , m_isDebugging(false)
 	{
@@ -119,15 +123,17 @@ public:
 		return s_garbage_collect_robot;
 	}
     vptr alloc ( euint size ) {
-        return MemAllocator_alloc(m_mem_allocator, size, false);
-    }
+        ///return MemAllocator_alloc(m_mem_allocator, size, false);
+		return malloc(size);
+	}
 	void insert ( const vptr p, euint s, const char* n, destructor d ) {
 		mem_btree_node* node = m_btree.insert((vptr)p, s, n, d);
         push_orphan_node(node);
 	}
 	void remove ( const vptr p ) {
 		if (m_btree.remove((vptr)p)) {
-            MemAllocator_free(m_mem_allocator, p);
+            ///MemAllocator_free(m_mem_allocator, p);
+			free(p);
 		}
 	}
 	void attach ( const vptr section, vptr mem ) {
@@ -142,18 +148,22 @@ public:
                     printf("%s root ref count is %d\n",
                            node->name,
                            (euint32)node->root_ref_count);
+					/**
                     printf("%s number of input links is %d\n",
                            node->name,
                            (euint32)node->input_map.size());
+						   **/
                     printf("%s number of output links is %d\n",
                            node->name,
                            (euint32)node->output_map.size());
                     printf("%s root ref count is %d\n",
                            parent->name,
                            (euint32)parent->root_ref_count);
+					/**
                     printf("%s number of input links is %d\n",
                            parent->name,
                            (euint32)parent->input_map.size());
+						   **/
                     printf("%s number of output links is %d\n",
                            parent->name,
                            (euint32)parent->output_map.size());
@@ -168,9 +178,11 @@ public:
                     printf("%s root ref count is %d\n",
                            node->name,
                            (euint32)node->root_ref_count);
+					/**
                     printf("%s number of input links is %d\n",
                            node->name,
                            (euint32)node->input_map.size());
+						   **/
                     printf("%s number of output links is %d\n",
                            node->name,
                            (euint32)node->output_map.size());
@@ -192,18 +204,22 @@ public:
                     printf("%s root ref count is %d\n",
                            node->name,
                            (euint32)node->root_ref_count);
+					/**
                     printf("%s number of input links is %d\n",
                            node->name,
                            (euint32)node->input_map.size());
+						   **/
                     printf("%s number of output links is %d\n",
                            node->name,
                            (euint32)node->output_map.size());
                     printf("%s root ref count is %d\n",
                            parent->name,
                            (euint32)parent->root_ref_count);
+					/**
                     printf("%s number of input links is %d\n",
                            parent->name,
                            (euint32)parent->input_map.size());
+						   **/
                     printf("%s number of output links is %d\n",
                            parent->name,
                            (euint32)parent->output_map.size());
@@ -218,9 +234,11 @@ public:
                     printf("%s root ref count is %d\n",
                            node->name,
                            (euint32)node->root_ref_count);
+					/**
                     printf("%s number of input links is %d\n",
                            node->name,
                            (euint32)node->input_map.size());
+						   **/
                     printf("%s number of output links is %d\n",
                            node->name,
                            (euint32)node->output_map.size());
@@ -251,6 +269,21 @@ public:
 		tail = node;
 		if (!head)
 			head = node;
+
+		if (node->root_ref_count) {
+			if (node == root_tail)
+				return;
+			if (node == root_head)   { root_head = node->root_next; }
+			if (node->root_prev)     { node->root_prev->root_next = node->root_next; }
+			if (node->root_next)     { node->root_next->root_prev = node->root_prev; }
+			node->root_next = NULL;
+			node->root_prev = root_tail;
+			if (root_tail)
+				root_tail->root_next = node;
+			root_tail = node;
+			if (!root_head)
+				root_head = node;
+		}
 	}
     void scan_orphan_nodes(esint32 num_cmds) {
         mem_btree_node* node = orphan;
@@ -266,6 +299,40 @@ public:
         }
     }
 	void scan_detach_nodes() {
+		
+		mem_btree_node* node = tail;
+		while (node) {
+			node->is_garbage = true;
+			node = node->prev;
+		}
+		node = root_tail;
+		while (node) {
+			if (node->root_ref_count) {
+                node->MakeNotGarbage();
+			}
+			node = node->root_prev;
+		}
+		node = tail;
+		while (node) {
+			if (node->is_garbage) {
+				vptr ptr = node->begin_addr;
+				if (node == head) { head = node->next; }
+				if (node == tail) { tail = node->prev; }
+				if (node->prev)   { node->prev->next = node->next; }
+				if (node->next)   { node->next->prev = node->prev; }
+
+				if (node == root_head) { root_head = node->root_next; }
+				if (node == root_tail) { root_tail = node->root_prev; }
+				if (node->root_prev)   { node->root_prev->root_next = node->root_next; }
+				if (node->root_next)   { node->root_next->root_prev = node->root_prev; }
+				node = node->prev;
+				remove(ptr);
+			}
+			else {
+				node = node->prev;
+			}
+		}
+		/**
 		mem_btree_node* node = tail;
 		while (node) {
 			if (!node->TrackBack()) {
@@ -281,6 +348,10 @@ public:
 			    node = node->prev;
             }
 		}
+		**/
+	}
+	euint get_alloced_mem_size() {
+		return MemAllocator_get_alloced_mem_size(m_mem_allocator);
 	}
 	virtual void CommandProcImpl(xhn::static_string sender, RobotCommand* command);
 	virtual void CommandReceiptProcImpl(xhn::static_string sender, RobotCommandReceipt* receipt) {}
@@ -291,11 +362,19 @@ class sender_robot : public Robot
 {
     DeclareRTTI;
 public:
+<<<<<<< HEAD
     RWBuffer m_channel;
 public:
     sender_robot()
     : m_channel(NULL)
     {};
+=======
+	RWBuffer m_channel;
+public:
+	sender_robot()
+		: m_channel(NULL)
+	{}
+>>>>>>> 9735ed6734d02a2d58f7150f6830c45f8ccbe7ad
 	void create ( const vptr mem, euint size, const char* name, destructor dest );
 	void attach ( const vptr section, vptr mem );
 	void detach ( const vptr section, vptr mem );
@@ -427,7 +506,7 @@ public:
 };
 }
 
-#define GC_ALLOC(t) xhn::garbage_collector::get()->alloc<t>(__FILE__, __LINE__, NULL)
+#define GC_ALLOC(t, s) xhn::garbage_collector::get()->alloc<t>(__FILE__, __LINE__, s)
 #endif
 
 /**
