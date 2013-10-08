@@ -79,10 +79,7 @@ class scan_mem_node_action : public Action
 {
 	DeclareRTTI;
 public:
-    euint32 m_doCount;
-public:
     scan_mem_node_action()
-    : m_doCount(0)
     {}
 	virtual void DoImpl();
 };

@@ -45,11 +45,7 @@ void xhn::scan_orphan_node_action::DoImpl()
 
 void xhn::scan_mem_node_action::DoImpl()
 {
-    m_doCount++;
-    if (m_doCount > 10000) {
-	    garbage_collect_robot::get()->scan_detach_nodes();
-        m_doCount = 0;
-    }
+	garbage_collect_robot::get()->scan_detach_nodes();
 }
 
 void xhn::garbage_collect_robot::CommandProcImpl(xhn::static_string sender, RobotCommand* command)
