@@ -101,6 +101,7 @@ API_EXPORT void* MemAllocator_salloc(MemAllocator _self, euint _size);
 API_EXPORT void MemAllocator_free(MemAllocator _self, void* _ptr);
 API_EXPORT void MemAllocator_log(MemAllocator _self);
 API_EXPORT bool MemAllocator_check(MemAllocator _self);
+API_EXPORT euint MemAllocator_get_alloced_mem_size(MemAllocator _self);
 #endif
 
 /**

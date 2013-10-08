@@ -260,10 +260,14 @@ void RobotManager::SendCommand(xhn::static_string sender, xhn::static_string rec
 		RobotManager::Get()->GetChannel(sender,
 		receiver);
 	if (channel) {
-		while (!RWBuffer_Write(channel, (const euint*)&cmd, sizeof(cmd))) {}
+		SendCommand(channel, cmd);
 	}
 	else
 		delete cmd;
+}
+void RobotManager::SendCommand(RWBuffer channel, RobotCommand* cmd)
+{
+     while (!RWBuffer_Write(channel, (const euint*)&cmd, sizeof(cmd))) {}
 }
 ///**********************************************************************///
 ///                       class implement end                            ///
