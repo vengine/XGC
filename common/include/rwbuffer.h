@@ -17,6 +17,21 @@ API_EXPORT void RWBuffer_delete(RWBuffer _self);
 API_EXPORT bool RWBuffer_Read(RWBuffer _self, euint* result, euint* read_size);
 API_EXPORT bool RWBuffer_Write(RWBuffer _self, const euint* from, const euint write_size);
 API_EXPORT bool RWBuffer_IsEmpty(RWBuffer _self);
+
+class SafedBuffer
+{
+public:
+    euint* m_transferBuffer;
+    RWBuffer m_buffer;
+public:
+    SafedBuffer(euint bufferSize);
+    ~SafedBuffer();
+    template <typename T>
+    void Write(const T& from) {
+        ///
+    }
+    void Read(euint* result, euint* read_size);
+};
 #endif
 
 /**

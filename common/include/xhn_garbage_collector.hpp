@@ -123,8 +123,8 @@ public:
 		return s_garbage_collect_robot;
 	}
     vptr alloc ( euint size ) {
-        ///return MemAllocator_alloc(m_mem_allocator, size, false);
-		return malloc(size);
+        return MemAllocator_alloc(m_mem_allocator, size, false);
+		///return malloc(size);
 	}
 	void insert ( const vptr p, euint s, const char* n, destructor d ) {
 		mem_btree_node* node = m_btree.insert((vptr)p, s, n, d);
@@ -132,8 +132,8 @@ public:
 	}
 	void remove ( const vptr p ) {
 		if (m_btree.remove((vptr)p)) {
-            ///MemAllocator_free(m_mem_allocator, p);
-			free(p);
+            MemAllocator_free(m_mem_allocator, p);
+			///free(p);
 		}
 	}
 	void attach ( const vptr section, vptr mem ) {
@@ -362,19 +362,11 @@ class sender_robot : public Robot
 {
     DeclareRTTI;
 public:
-<<<<<<< HEAD
     RWBuffer m_channel;
 public:
     sender_robot()
     : m_channel(NULL)
     {};
-=======
-	RWBuffer m_channel;
-public:
-	sender_robot()
-		: m_channel(NULL)
-	{}
->>>>>>> 9735ed6734d02a2d58f7150f6830c45f8ccbe7ad
 	void create ( const vptr mem, euint size, const char* name, destructor dest );
 	void attach ( const vptr section, vptr mem );
 	void detach ( const vptr section, vptr mem );

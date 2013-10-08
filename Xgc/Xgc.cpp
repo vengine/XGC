@@ -3,6 +3,7 @@
 
 #include "xhn_garbage_collector.hpp"
 #include "xhn_mem_handle.hpp"
+#include "rwbuffer.h"
 class ListNode;
 typedef xhn::garbage_collector::mem_handle<ListNode> ListNodeHandle;
 class ListNode
@@ -63,9 +64,41 @@ public:
 	}
 };
 
+struct TTT
+{
+    euint32 mbuf[3];
+    ///char mmm[3];
+    ///char mbuf[12];
+};
+
 typedef xhn::garbage_collector::mem_handle<List> ListHandle;
 int main(void)
 {
+    TTT t0;
+    TTT t1;
+    TTT t2;
+    TTT t3;
+    euint s;
+    
+    t0.mbuf[0] = 100000;
+    t0.mbuf[1] = 200000;
+    t0.mbuf[2] = 300000;
+    
+    /**
+    t0.mmm[0] = 'a';
+    t0.mmm[1] = 'b';
+    t0.mmm[2] = 0x00;
+     **/
+    ///memcpy(t0.mbuf, "abcdefghijk", strlen("abcdefghijk") + 1);
+    RWBuffer buffer = RWBuffer_new(256);
+    
+    RWBuffer_Write(buffer, (const euint*)&t0, sizeof(t0));
+    RWBuffer_Write(buffer, (const euint*)&t0, sizeof(t0));
+    RWBuffer_Read(buffer, (euint*)&t1, &s);
+    RWBuffer_Read(buffer, (euint*)&t2, &s);
+    RWBuffer_Write(buffer, (const euint*)&t0, sizeof(t0));
+    RWBuffer_Read(buffer, (euint*)&t3, &s);
+    ///printf("%s\n%s\n%s\n", t1.mbuf, t2.mbuf, t2.mbuf);
     xhn::IntHandle intHandle;
     intHandle = GC_ALLOC(int, "intHandle");
     *intHandle = 0;
