@@ -291,6 +291,11 @@ class sender_robot : public Robot
 {
     DeclareRTTI;
 public:
+    RWBuffer m_channel;
+public:
+    sender_robot()
+    : m_channel(NULL)
+    {};
 	void create ( const vptr mem, euint size, const char* name, destructor dest );
 	void attach ( const vptr section, vptr mem );
 	void detach ( const vptr section, vptr mem );
