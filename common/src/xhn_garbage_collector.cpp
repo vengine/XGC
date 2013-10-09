@@ -51,7 +51,12 @@ euint xhn::mem_detach_command::GetSelfSize()
 
 void xhn::scan_orphan_node_action::DoImpl()
 {
-	///if (garbage_collect_robot::get()->get_alloced_mem_size() > 5 * 1024 * 1024) 
+	/**
+	if (garbage_collect_robot::get()->get_alloced_mem_size() < (64 * 1024))
+		garbage_collect_robot::get()->m_isSingleCommandMode = false;
+	else
+		garbage_collect_robot::get()->m_isSingleCommandMode = true;
+	**/
 	{
         garbage_collect_robot::get()->scan_orphan_nodes(garbage_collect_robot::get()->command_count);
         garbage_collect_robot::get()->command_count = 0;
@@ -60,9 +65,8 @@ void xhn::scan_orphan_node_action::DoImpl()
 
 void xhn::scan_mem_node_action::DoImpl()
 {
-	///if (garbage_collect_robot::get()->get_alloced_mem_size() > 5 * 1024 * 1024) 
 	{
-	    garbage_collect_robot::get()->scan_detach_nodes();
+		garbage_collect_robot::get()->scan_detach_nodes();
 	}
 }
 

@@ -124,7 +124,6 @@ public:
 	}
     vptr alloc ( euint size ) {
         return MemAllocator_alloc(m_mem_allocator, size, false);
-		///return malloc(size);
 	}
 	void insert ( const vptr p, euint s, const char* n, destructor d ) {
 		mem_btree_node* node = m_btree.insert((vptr)p, s, n, d);
@@ -133,7 +132,6 @@ public:
 	void remove ( const vptr p ) {
 		if (m_btree.remove((vptr)p)) {
             MemAllocator_free(m_mem_allocator, p);
-			///free(p);
 		}
 	}
 	void attach ( const vptr section, vptr mem ) {
@@ -332,23 +330,6 @@ public:
 				node = node->prev;
 			}
 		}
-		/**
-		mem_btree_node* node = tail;
-		while (node) {
-			if (!node->TrackBack()) {
-                vptr ptr = node->begin_addr;
-                if (node == head) { head = node->next; }
-                if (node == tail) { tail = node->prev; }
-                if (node->prev)   { node->prev->next = node->next; }
-                if (node->next)   { node->next->prev = node->prev; }
-                node = node->prev;
-                remove(ptr);
-            }
-            else {
-			    node = node->prev;
-            }
-		}
-		**/
 	}
 	euint get_alloced_mem_size() {
 		return MemAllocator_get_alloced_mem_size(m_mem_allocator);
@@ -498,7 +479,7 @@ public:
 };
 }
 
-#define GC_ALLOC(t, s) xhn::garbage_collector::get()->alloc<t>(__FILE__, __LINE__, s)
+#define GC_ALLOC(t) xhn::garbage_collector::get()->alloc<t>(__FILE__, __LINE__, NULL)
 #endif
 
 /**

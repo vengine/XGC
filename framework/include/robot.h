@@ -94,13 +94,15 @@ public:
     typedef xhn::map<xhn::static_string, SafedBuffer*> ChannelMap;
 	ActionQueue m_actionQueue;
 	int m_curtActionIndex;
+	bool m_isSingleCommandMode;
 private:
 	ChannelMap m_commandReceivingChannels;
 	ChannelMap m_commandTransmissionChannels;
 public:
 	Robot()
-		: m_curtActionIndex(-1) {
-	}
+		: m_curtActionIndex(-1)
+	    , m_isSingleCommandMode(true)
+	{}
 	virtual ~Robot();
 	inline void AddAction(ActionPtr act) {
 		 m_actionQueue.push_back(act);

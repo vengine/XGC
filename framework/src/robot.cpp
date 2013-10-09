@@ -47,8 +47,6 @@ Robot::~Robot()
 	ChannelMap::iterator iter = m_commandTransmissionChannels.begin();
 	ChannelMap::iterator end = m_commandTransmissionChannels.end();
 	for (; iter != end; iter++) {
-		///RWBuffer buf = iter->second;
-		///RWBuffer_delete(buf);
 		SafedBuffer* buf = iter->second;
 		delete buf;
 	}
@@ -71,28 +69,26 @@ void Robot::CommandProc()
     ChannelMap::iterator end = m_commandReceivingChannels.end();
     for (; iter != end; iter++)
 	{
-		///RobotCommandBase* cmdBase[2];
 		euint size = 0;
-		///RWBuffer channel = iter->second;
 		SafedBuffer* channel = iter->second;
-		///while (RWBuffer_Read(channel, (euint*)cmdBase, &size))
 		char* ret = NULL;
 		while ( (ret = channel->Read(&size)) )
 		{
 			RobotCommandBase* rcb = (RobotCommandBase*)ret;
-			///memcpy(&rcb, ret, sizeof(RobotCommandBase*));
 			RobotCommand* cmd =
             rcb->DynamicCast<RobotCommand>();
 			if (cmd) {
 				CommandProcImpl(iter->first, cmd);
-				///delete cmd;
+				if (m_isSingleCommandMode)
+					break;
 				continue;
 			}
 			RobotCommandReceipt* rec =
 			rcb->DynamicCast<RobotCommandReceipt>();
 			if (rec) {
 				CommandReceiptProcImpl(iter->first, rec);
-				///delete rec;
+				if (m_isSingleCommandMode)
+					break;
 			}
 		}
 	}
@@ -137,12 +133,10 @@ void RobotManager::MakeChannel(xhn::static_string sender,
 	Robot* sRob = s->second;
     Robot::ChannelMap::iterator iter =
     sRob->m_commandTransmissionChannels.find(receiver);
-	///RWBuffer channel = NULL;
 	SafedBuffer* channel = NULL;
 	if (iter != sRob->m_commandTransmissionChannels.end())
 		channel = iter->second;
 	else {
-		///channel = RWBuffer_new(1024 * 1024);
 		channel = ENEW SafedBuffer(1024 * 1024);
 		sRob->m_commandTransmissionChannels.insert(
             xhn::make_pair(receiver, channel)
