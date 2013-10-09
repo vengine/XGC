@@ -362,7 +362,7 @@ class sender_robot : public Robot
 {
     DeclareRTTI;
 public:
-    RWBuffer m_channel;
+    SafedBuffer* m_channel;
 public:
     sender_robot()
     : m_channel(NULL)

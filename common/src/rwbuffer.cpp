@@ -122,10 +122,17 @@ bool RWBuffer_Write(RWBuffer _self, const euint* from, const euint write_size)
     if (buffer_chunk_pointer > _self->bottom_barrier)
         buffer_chunk_pointer = (euint*)_self->top_barrier;
 
+	if (buffer_chunk_pointer == registered_top_pointer)
+		return false;
+
     *registered_bottom_pointer = write_size;
+
     registered_bottom_pointer++;
     if (registered_bottom_pointer > _self->bottom_barrier)
         registered_bottom_pointer = (euint*)_self->top_barrier;
+	if (registered_bottom_pointer == registered_top_pointer)
+		return false;
+
     *registered_bottom_pointer = (euint)buffer_chunk_pointer;
 
     _self->bottom_pointer = buffer_chunk_pointer;
@@ -138,6 +145,24 @@ bool RWBuffer_IsEmpty(RWBuffer _self)
 	return registered_top_pointer == _self->bottom_pointer;
 }
 
+SafedBuffer::SafedBuffer(euint bufferSize)
+{
+	euint size = GetRealSize(euint, bufferSize);
+	m_transferBuffer = (char*)Malloc(size);
+    m_buffer = RWBuffer_new(bufferSize);
+}
+SafedBuffer::~SafedBuffer()
+{
+    Mfree(m_transferBuffer);
+	RWBuffer_delete(m_buffer);
+}
+char* SafedBuffer::Read(euint* readSize)
+{
+	if (RWBuffer_Read(m_buffer, (euint*)m_transferBuffer, readSize))
+		return m_transferBuffer;
+	else
+		return NULL;
+}
 /**
  * Copyright (c) 2011-2013 Xu Haining
  *

@@ -47,8 +47,10 @@ Robot::~Robot()
 	ChannelMap::iterator iter = m_commandTransmissionChannels.begin();
 	ChannelMap::iterator end = m_commandTransmissionChannels.end();
 	for (; iter != end; iter++) {
-		RWBuffer buf = iter->second;
-		RWBuffer_delete(buf);
+		///RWBuffer buf = iter->second;
+		///RWBuffer_delete(buf);
+		SafedBuffer* buf = iter->second;
+		delete buf;
 	}
 }
 void Robot::RunOnce()
@@ -69,25 +71,28 @@ void Robot::CommandProc()
     ChannelMap::iterator end = m_commandReceivingChannels.end();
     for (; iter != end; iter++)
 	{
-		RobotCommandBase* cmdBase[2];
+		///RobotCommandBase* cmdBase[2];
 		euint size = 0;
-		RWBuffer channel = iter->second;
-		while (RWBuffer_Read(channel, (euint*)cmdBase, &size))
+		///RWBuffer channel = iter->second;
+		SafedBuffer* channel = iter->second;
+		///while (RWBuffer_Read(channel, (euint*)cmdBase, &size))
+		char* ret = NULL;
+		while ( (ret = channel->Read(&size)) )
 		{
-			if (size >= sizeof(RobotCommandBase*)) {
-				RobotCommand* cmd =
-                cmdBase[0]->DynamicCast<RobotCommand>();
-				if (cmd) {
-                    CommandProcImpl(iter->first, cmd);
-				    delete cmd;
-					break;
-				}
-				RobotCommandReceipt* rec =
-                cmdBase[0]->DynamicCast<RobotCommandReceipt>();
-				if (rec) {
-					CommandReceiptProcImpl(iter->first, rec);
-					delete rec;
-				}
+			RobotCommandBase* rcb = (RobotCommandBase*)ret;
+			///memcpy(&rcb, ret, sizeof(RobotCommandBase*));
+			RobotCommand* cmd =
+            rcb->DynamicCast<RobotCommand>();
+			if (cmd) {
+				CommandProcImpl(iter->first, cmd);
+				///delete cmd;
+				continue;
+			}
+			RobotCommandReceipt* rec =
+			rcb->DynamicCast<RobotCommandReceipt>();
+			if (rec) {
+				CommandReceiptProcImpl(iter->first, rec);
+				///delete rec;
 			}
 		}
 	}
@@ -132,11 +137,13 @@ void RobotManager::MakeChannel(xhn::static_string sender,
 	Robot* sRob = s->second;
     Robot::ChannelMap::iterator iter =
     sRob->m_commandTransmissionChannels.find(receiver);
-	RWBuffer channel = NULL;
+	///RWBuffer channel = NULL;
+	SafedBuffer* channel = NULL;
 	if (iter != sRob->m_commandTransmissionChannels.end())
 		channel = iter->second;
 	else {
-		channel = RWBuffer_new(1024 * 1024);
+		///channel = RWBuffer_new(1024 * 1024);
+		channel = ENEW SafedBuffer(1024 * 1024);
 		sRob->m_commandTransmissionChannels.insert(
             xhn::make_pair(receiver, channel)
         );
@@ -151,6 +158,7 @@ void RobotManager::MakeChannel(xhn::static_string sender,
             xhn::make_pair(sender, channel)
         );
 }
+/**
 void RobotManager::BreakChannel(xhn::static_string sender,
                                 xhn::static_string receiver)
 {
@@ -178,7 +186,8 @@ void RobotManager::BreakChannel(xhn::static_string sender,
 		}
 	}
 }
-RWBuffer RobotManager::GetChannel(xhn::static_string sender,
+**/
+SafedBuffer* RobotManager::GetChannel(xhn::static_string sender,
                                   xhn::static_string receiver)
 {
     xhn::RWLock2::Instance inst = m_readwriteLock.GetReadLock();
@@ -254,9 +263,10 @@ void RobotManager::Push(Robot* rob)
     xhn::RWLock2::Instance inst =  m_readwriteLock.GetWriteLock();
     m_robots->push_back(rob);
 }
+/**
 void RobotManager::SendCommand(xhn::static_string sender, xhn::static_string receiver, RobotCommand* cmd)
 {
-	RWBuffer channel =
+	SafedBuffer* channel =
 		RobotManager::Get()->GetChannel(sender,
 		receiver);
 	if (channel) {
@@ -265,10 +275,12 @@ void RobotManager::SendCommand(xhn::static_string sender, xhn::static_string rec
 	else
 		delete cmd;
 }
-void RobotManager::SendCommand(RWBuffer channel, RobotCommand* cmd)
+void RobotManager::SendCommand(SafedBuffer* channel, RobotCommand* cmd)
 {
-     while (!RWBuffer_Write(channel, (const euint*)&cmd, sizeof(cmd))) {}
+     ///while (!RWBuffer_Write(channel, (const euint*)&cmd, sizeof(cmd))) {}
+	while (!channel->Write(cmd)) {}
 }
+**/
 ///**********************************************************************///
 ///                       class implement end                            ///
 ///**********************************************************************///

@@ -77,24 +77,27 @@ void xhn::sender_robot::create ( const vptr mem, euint size, const char* name, d
     if (!m_channel) {
         m_channel = RobotManager::Get()->GetChannel(GetName(), COMMAND_RECEIVER);
     }
-	mem_create_command* cmd = ENEW mem_create_command(mem, size, name, dest);
-	while (!RWBuffer_Write(m_channel, (const euint*)&cmd, sizeof(cmd))) {}
+	mem_create_command cmd(mem, size, name, dest);
+	///RobotManager::Get()->SendCommand(m_channel, cmd);
+	while (!m_channel->Write(cmd));
 }
 void xhn::sender_robot::attach ( const vptr section, vptr mem )
 {
     if (!m_channel) {
         m_channel = RobotManager::Get()->GetChannel(GetName(), COMMAND_RECEIVER);
     }
-    mem_attatch_command* cmd = ENEW mem_attatch_command(section, mem);
-	while (!RWBuffer_Write(m_channel, (const euint*)&cmd, sizeof(cmd))) {}
+    mem_attatch_command cmd(section, mem);
+	///RobotManager::Get()->SendCommand(m_channel, cmd);
+	while (!m_channel->Write(cmd));
 }
 void xhn::sender_robot::detach ( const vptr section, vptr mem )
 {
     if (!m_channel) {
         m_channel = RobotManager::Get()->GetChannel(GetName(), COMMAND_RECEIVER);
     }
-	mem_detach_command* cmd = ENEW mem_detach_command(section, mem);
-	while (!RWBuffer_Write(m_channel, (const euint*)&cmd, sizeof(cmd))) {}
+	mem_detach_command cmd(section, mem);
+	///RobotManager::Get()->SendCommand(m_channel, cmd);
+	while (!m_channel->Write(cmd));
 }
 
 xhn::garbage_collector* xhn::garbage_collector::s_garbage_collector = NULL;

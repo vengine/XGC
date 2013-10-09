@@ -91,7 +91,7 @@ class Robot : public MemObject
 public:
 	///pthread_t m_thread;
     typedef xhn::vector<ActionPtr> ActionQueue;
-    typedef xhn::map<xhn::static_string, RWBuffer> ChannelMap;
+    typedef xhn::map<xhn::static_string, SafedBuffer*> ChannelMap;
 	ActionQueue m_actionQueue;
 	int m_curtActionIndex;
 private:
@@ -184,8 +184,8 @@ public:
 	}
     Robot* GetRobot(xhn::static_string robName);
 	void MakeChannel(xhn::static_string sender, xhn::static_string receiver);
-	void BreakChannel(xhn::static_string sender, xhn::static_string receiver);
-	RWBuffer GetChannel(xhn::static_string sender, xhn::static_string receiver);
+	///void BreakChannel(xhn::static_string sender, xhn::static_string receiver);
+	SafedBuffer* GetChannel(xhn::static_string sender, xhn::static_string receiver);
 	static void Init();
 	static void Dest();
 	static RobotManager* Get();
@@ -207,8 +207,8 @@ public:
 	void DeleteAllRobots();
     Robot* Pop();
     void Push(Robot* rob);
-	void SendCommand(xhn::static_string sender, xhn::static_string receiver, RobotCommand* cmd);
-	void SendCommand(RWBuffer channel, RobotCommand* cmd);
+	///void SendCommand(xhn::static_string sender, xhn::static_string receiver, RobotCommand* cmd);
+	///void SendCommand(SafedBuffer* channel, RobotCommand* cmd);
 };
 ///**********************************************************************///
 ///                       class define end                               ///

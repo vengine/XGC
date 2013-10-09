@@ -12,25 +12,31 @@
 #define RWBUFFER_H
 #include "common.h"
 #include "etypes.h"
+#include "emem.hpp"
 API_EXPORT RWBuffer RWBuffer_new(euint buffer_size);
 API_EXPORT void RWBuffer_delete(RWBuffer _self);
 API_EXPORT bool RWBuffer_Read(RWBuffer _self, euint* result, euint* read_size);
 API_EXPORT bool RWBuffer_Write(RWBuffer _self, const euint* from, const euint write_size);
 API_EXPORT bool RWBuffer_IsEmpty(RWBuffer _self);
 
-class SafedBuffer
+class SafedBuffer : public MemObject
 {
 public:
-    euint* m_transferBuffer;
+    char* m_transferBuffer;
     RWBuffer m_buffer;
 public:
     SafedBuffer(euint bufferSize);
     ~SafedBuffer();
     template <typename T>
-    void Write(const T& from) {
-        ///
+    bool Write(const T& from) {
+		euint tmp[ (sizeof(T) % sizeof(euint)) ? 
+			        sizeof(T) / sizeof(euint) * sizeof(euint) + sizeof(euint) :
+		            sizeof(T) / sizeof(euint) ];
+		memset(tmp, 0, sizeof(tmp));
+		memcpy(tmp, &from, sizeof(T));
+		return RWBuffer_Write(m_buffer, tmp, sizeof(T));
     }
-    void Read(euint* result, euint* read_size);
+    char* Read(euint* readSize);
 };
 #endif
 
