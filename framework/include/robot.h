@@ -111,8 +111,8 @@ public:
 public:
 	void RunOnce();
 	void CommandProc();
-	virtual void CommandProcImpl(xhn::static_string sender, RobotCommand* command) {}
-	virtual void CommandReceiptProcImpl(xhn::static_string sender, RobotCommandReceipt* receipt) {}
+	virtual bool CommandProcImpl(xhn::static_string sender, RobotCommand* command) { return true; }
+	virtual bool CommandReceiptProcImpl(xhn::static_string sender, RobotCommandReceipt* receipt) { return true; }
 	virtual xhn::static_string GetName() = 0;
 	virtual void InitChannels() {}
 	inline void Next() {

@@ -52,10 +52,14 @@ void xhn::scan_mem_node_action::DoImpl()
 	}
 }
 
-void xhn::garbage_collect_robot::CommandProcImpl(xhn::static_string sender, RobotCommand* command)
+bool xhn::garbage_collect_robot::CommandProcImpl(xhn::static_string sender, RobotCommand* command)
 {
     command->Do(this, sender);
     command_count++;
+	if (!command->DynamicCast<mem_detach_command>())
+		return true;
+	else
+		return false;
 }
 
 void xhn::sender_robot::create ( const vptr mem, euint size, const char* name, destructor dest )

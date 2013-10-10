@@ -335,8 +335,8 @@ public:
 	euint get_alloced_mem_size() {
 		return MemAllocator_get_alloced_mem_size(m_mem_allocator);
 	}
-	virtual void CommandProcImpl(xhn::static_string sender, RobotCommand* command);
-	virtual void CommandReceiptProcImpl(xhn::static_string sender, RobotCommandReceipt* receipt) {}
+	virtual bool CommandProcImpl(xhn::static_string sender, RobotCommand* command);
+	virtual bool CommandReceiptProcImpl(xhn::static_string sender, RobotCommandReceipt* receipt) { return true; }
 	virtual xhn::static_string GetName() { return COMMAND_RECEIVER; }
 };
 

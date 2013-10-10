@@ -72,8 +72,8 @@ void Robot::CommandProc()
 		euint size = 0;
 		SafedBuffer* channel = iter->second;
 		char* ret = NULL;
-		///while ( (ret = channel->Read(&size)) )
-		if ( (ret = channel->Read(&size)) )
+		while ( (ret = channel->Read(&size)) )
+		///if ( (ret = channel->Read(&size)) )
 		{
 #ifdef USE_COMMAND_PTR
 			RobotCommandBase* rcb = *((RobotCommandBase**)ret);
@@ -95,13 +95,15 @@ void Robot::CommandProc()
 			RobotCommand* cmd =
             rcb->DynamicCast<RobotCommand>();
 			if (cmd) {
-				CommandProcImpl(iter->first, cmd);
+				if (!CommandProcImpl(iter->first, cmd))
+					break;
 				continue;
 			}
 			RobotCommandReceipt* rec =
 			rcb->DynamicCast<RobotCommandReceipt>();
 			if (rec) {
-				CommandReceiptProcImpl(iter->first, rec);
+				if (!CommandReceiptProcImpl(iter->first, rec))
+					break;
 			}
 #endif
 		}

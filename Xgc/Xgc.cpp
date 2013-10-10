@@ -103,9 +103,6 @@ int main(void)
 			///printf("gc alloc 100000\n");
 			///*intHandle = 0;
 		}
-		if ((*intHandle % 25) == 0) {
-			Sleep(1);
-		}
     }
 	while(1) {}
 	return 0;
