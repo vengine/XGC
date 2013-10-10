@@ -144,6 +144,8 @@ bool RWBuffer_IsEmpty(RWBuffer _self)
 }
 
 SafedBuffer::SafedBuffer(euint bufferSize)
+: m_nonblockingCount(0)
+, m_blockingCount(0)
 {
 	euint size = GetRealSize(euint, bufferSize);
 	m_transferBuffer = (char*)Malloc(size);

@@ -24,19 +24,31 @@ class SafedBuffer : public MemObject
 public:
     char* m_transferBuffer;
     RWBuffer m_buffer;
+    euint64 m_nonblockingCount;
+	euint64 m_blockingCount;
 public:
     SafedBuffer(euint bufferSize);
     ~SafedBuffer();
     template <typename T>
-    bool Write(const T& from) {
+    void Write(const T& from) {
 		euint tmp[ (sizeof(T) % sizeof(euint)) ? 
 			        sizeof(T) / sizeof(euint) * sizeof(euint) + sizeof(euint) :
 		            sizeof(T) / sizeof(euint) ];
 		memset(tmp, 0, sizeof(tmp));
-		memcpy(tmp, &from, sizeof(T));
-		return RWBuffer_Write(m_buffer, tmp, sizeof(T));
+		memcpy(tmp, (vptr)&from, sizeof(T));
+		while (!RWBuffer_Write(m_buffer, tmp, sizeof(T))) {
+            m_blockingCount++;
+        }
+        m_nonblockingCount++;
     }
     char* Read(euint* readSize);
+    inline float GetBlockrate()
+    {
+        float ret = (float)((double)m_blockingCount / (double)(m_blockingCount + m_nonblockingCount));
+        m_blockingCount = 0;
+        m_nonblockingCount = 0;
+        return ret;
+    }
 };
 #endif
 

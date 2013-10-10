@@ -34,36 +34,8 @@ void* RobotThread::Execute(void *_robThd)
 
 void RobotThread::Run()
 {
-    /**
-	while (m_isRunning) {
-		RobotManager::RobotArray::CheckoutHandle handle;
-		Robot* nextActivedRobot = NULL;
-		/// loop begin
-		do
-		{
-			nextActivedRobot = NULL;
-			/// checkout robot array
-			handle = RobotManager::Get()->Checkout();
-
-			xhn::list<Robot*>* robots = handle.Get();
-			if (m_curtActivedRobot) {
-				robots->push_back(m_curtActivedRobot);
-			}
-			if (robots->size()) {
-				nextActivedRobot = robots->front();
-				robots->pop_front();
-			}
-		} while (!RobotManager::Get()->Submit(handle));
-
-		m_curtActivedRobot = nextActivedRobot;
-		if (m_curtActivedRobot) {
-			m_curtActivedRobot->DoAction();
-		}
-	}
-     **/
     while (m_isRunning) {
 		if (m_isPolling) {
-			RobotManager::RobotArray::CheckoutHandle handle;
 			Robot* nextActivedRobot = RobotManager::Get()->Pop();
 			m_curtActivedRobot = nextActivedRobot;
 			if (m_curtActivedRobot) {

@@ -13,7 +13,7 @@
 #include "elog.h"
 #include "eassert.h"
 
-#define USE_C_MALLOC
+///#define USE_C_MALLOC
 #ifndef __APPLE__
 #include <malloc.h>
 #else
@@ -534,9 +534,9 @@ void* MemAllocator_alloc(MemAllocator _self, euint _size, bool _is_safe_alloc)
 		ainfo.mem_pool = mp;
 		ainfo.iter = iter;
 
+        /**
         var data = List_get_value(iter);
 		MemPoolNode node = {(struct _mem_pool_node*)data.vptr_var};
-		
 		if (node.self != _self.self->tail)
 		{
 			if (node.self == _self.self->head) { _self.self->head = node.self->next; }
@@ -550,6 +550,7 @@ void* MemAllocator_alloc(MemAllocator _self, euint _size, bool _is_safe_alloc)
 			if (!_self.self->head)
 				_self.self->head = node.self;
 		}
+        **/
 		_self.self->alloced_mem_size += MemPool_chunk_size(mp);
 	}
 	else

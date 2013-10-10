@@ -39,17 +39,13 @@ void xhn::mem_detach_command::Do(Robot* exeRob, xhn::static_string sender)
 
 void xhn::scan_orphan_node_action::DoImpl()
 {	
-	{
-        garbage_collect_robot::get()->scan_orphan_nodes(garbage_collect_robot::get()->command_count);
-        garbage_collect_robot::get()->command_count = 0;
-	}
+    garbage_collect_robot::get()->scan_orphan_nodes(garbage_collect_robot::get()->command_count);
+    garbage_collect_robot::get()->command_count = 0;
 }
 
 void xhn::scan_mem_node_action::DoImpl()
 {
-	{
-		garbage_collect_robot::get()->scan_detach_nodes();
-	}
+	garbage_collect_robot::get()->scan_detach_nodes();
 }
 
 bool xhn::garbage_collect_robot::CommandProcImpl(xhn::static_string sender, RobotCommand* command)
@@ -72,10 +68,7 @@ void xhn::sender_robot::create ( const vptr mem, euint size, const char* name, d
     while (!m_channel->Write(cmd));
 #else
 	mem_create_command cmd(mem, size, name, dest);
-	while (!m_channel->Write(cmd)) {
-		m_blockingCount++;
-	}
-	m_nonblockingCount++;
+	m_channel->Write(cmd);
 #endif
 }
 void xhn::sender_robot::attach ( const vptr section, vptr mem )
@@ -88,10 +81,7 @@ void xhn::sender_robot::attach ( const vptr section, vptr mem )
 	while (!m_channel->Write(cmd));
 #else
     mem_attatch_command cmd(section, mem);
-	while (!m_channel->Write(cmd)) {
-		m_blockingCount++;
-	}
-	m_nonblockingCount++;
+	m_channel->Write(cmd);
 #endif
 }
 void xhn::sender_robot::detach ( const vptr section, vptr mem )
@@ -101,21 +91,18 @@ void xhn::sender_robot::detach ( const vptr section, vptr mem )
     }
 #ifdef USE_COMMAND_PTR
 	mem_detach_command* cmd = ENEW mem_detach_command(section, mem);
-	while (!m_channel->Write(cmd));
+	m_channel->Write(cmd);
 #else
 	mem_detach_command cmd(section, mem);
-	while (!m_channel->Write(cmd)) {
-		m_blockingCount++;
-	}
-	m_nonblockingCount++;
+	m_channel->Write(cmd);
 #endif
 }
 float xhn::sender_robot::get_blockrate()
 {
-    float ret = (float)((double)m_blockingCount / (double)(m_blockingCount + m_nonblockingCount));
-	m_blockingCount = 0;
-	m_nonblockingCount = 0;
-	return ret;
+    if (m_channel)
+        return m_channel->GetBlockrate();
+    else
+        return 0.0f;
 }
 xhn::garbage_collector* xhn::garbage_collector::s_garbage_collector = NULL;
 RobotThread* xhn::garbage_collector::s_garbage_collect_robot_thread = NULL;
@@ -143,7 +130,7 @@ xhn::garbage_collector::garbage_collector()
 
     if (!s_garbage_collect_robot_thread) {
 	    RobotThreadManager::Init();
-	    s_garbage_collect_robot_thread = RobotThreadManager::Get()->AddRobotThread();
+	    s_garbage_collect_robot_thread = RobotThreadManager::Get()->AddRobotThread(gc_rob);
         s_garbage_collect_robot_thread->SetSleepNanoSecond(0);
     }
 }

@@ -345,13 +345,9 @@ class sender_robot : public Robot
     DeclareRTTI;
 public:
     SafedBuffer* m_channel;
-	euint64 m_nonblockingCount;
-	euint64 m_blockingCount;
 public:
     sender_robot()
     : m_channel(NULL)
-	, m_nonblockingCount(0)
-	, m_blockingCount(0)
     {};
 	void create ( const vptr mem, euint size, const char* name, destructor dest );
 	void attach ( const vptr section, vptr mem );
@@ -371,29 +367,20 @@ class garbage_collector : public MemObject
 	template <typename> friend class mem_handle;
 	friend class mem_btree_node;
 public:
-    class mem_handle_listener
-    {
-    public:
-        virtual void pre_assign() = 0;
-        virtual void pre_dest() = 0;
-    };
     template <typename T>
     class mem_handle : public BannedAllocObject
     {
         friend class garbage_collector;
     private:
         T* m_ptr;
-        mem_handle_listener* m_list;
         bool m_is_transfer;
         explicit mem_handle(T* ptr)
 		: m_ptr(ptr)
-        , m_list(NULL)
         , m_is_transfer(true)
         {
         }
         mem_handle(const mem_handle<T>& ptr)
 		: m_ptr((T*)ptr.m_ptr)
-        , m_list(NULL)
         , m_is_transfer(false)
         {
             if (m_ptr == ptr.m_ptr)
@@ -405,15 +392,11 @@ public:
             garbage_collector::get()->attach((vptr)this, (vptr)ptr.m_ptr);
         }
     public:
-        void set_listener(mem_handle_listener* list) {
-            m_list = list;
-        }
         bool is_transfer() {
             return m_is_transfer;
         }
         explicit mem_handle()
         : m_ptr(NULL)
-        , m_list(NULL)
         , m_is_transfer(false)
         {}
         ~mem_handle()
