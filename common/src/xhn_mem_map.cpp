@@ -68,14 +68,14 @@ void xhn::mem_btree_node::Attach(const vptr handle, mem_btree_node* mem)
     input_pair ip = {this, (vptr)handle};
 	///mem->input_map.insert(xhn::make_pair(ip, mem));
 	output_map.insert(xhn::make_pair(handle, mem));
-	garbage_collect_robot::get()->push_detach_node(mem);
+	///garbage_collect_robot::get()->push_detach_node(mem);
 }
 void xhn::mem_btree_node::Detach(const vptr handle, mem_btree_node* mem)
 {
     input_pair ip = {this, (vptr)handle};
 	output_map.erase(handle);
 	///mem->input_map.erase(ip);
-	///garbage_collect_robot::get()->push_detach_node(mem);
+	garbage_collect_robot::get()->push_detach_node(mem);
 }
 void xhn::mem_btree_node::AttchToRoot() {
 	root_ref_count++;

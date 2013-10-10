@@ -130,8 +130,6 @@ bool RWBuffer_Write(RWBuffer _self, const euint* from, const euint write_size)
     registered_bottom_pointer++;
     if (registered_bottom_pointer > _self->bottom_barrier)
         registered_bottom_pointer = (euint*)_self->top_barrier;
-	if (registered_bottom_pointer == registered_top_pointer)
-		return false;
 
     *registered_bottom_pointer = (euint)buffer_chunk_pointer;
 

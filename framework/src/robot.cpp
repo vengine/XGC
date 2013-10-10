@@ -72,24 +72,38 @@ void Robot::CommandProc()
 		euint size = 0;
 		SafedBuffer* channel = iter->second;
 		char* ret = NULL;
-		while ( (ret = channel->Read(&size)) )
+		///while ( (ret = channel->Read(&size)) )
+		if ( (ret = channel->Read(&size)) )
 		{
+#ifdef USE_COMMAND_PTR
+			RobotCommandBase* rcb = *((RobotCommandBase**)ret);
+			RobotCommand* cmd =
+				rcb->DynamicCast<RobotCommand>();
+			if (cmd) {
+				CommandProcImpl(iter->first, cmd);
+				delete rcb;
+				continue;
+			}
+			RobotCommandReceipt* rec =
+				rcb->DynamicCast<RobotCommandReceipt>();
+			if (rec) {
+				CommandReceiptProcImpl(iter->first, rec);
+				delete rcb;
+			}
+#else
 			RobotCommandBase* rcb = (RobotCommandBase*)ret;
 			RobotCommand* cmd =
             rcb->DynamicCast<RobotCommand>();
 			if (cmd) {
 				CommandProcImpl(iter->first, cmd);
-				if (m_isSingleCommandMode)
-					break;
 				continue;
 			}
 			RobotCommandReceipt* rec =
 			rcb->DynamicCast<RobotCommandReceipt>();
 			if (rec) {
 				CommandReceiptProcImpl(iter->first, rec);
-				if (m_isSingleCommandMode)
-					break;
 			}
+#endif
 		}
 	}
 }
@@ -137,7 +151,7 @@ void RobotManager::MakeChannel(xhn::static_string sender,
 	if (iter != sRob->m_commandTransmissionChannels.end())
 		channel = iter->second;
 	else {
-		channel = ENEW SafedBuffer(1024 * 1024);
+		channel = ENEW SafedBuffer(3 * 1024 * 1024);
 		sRob->m_commandTransmissionChannels.insert(
             xhn::make_pair(receiver, channel)
         );

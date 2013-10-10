@@ -38,7 +38,6 @@ public:
 	{}
 	virtual bool Test(Robot* exeRob) { return true; }
 	virtual void Do(Robot* exeRob, xhn::static_string sender);
-	virtual euint GetSelfSize();
 };
 class mem_attatch_command : public RobotCommand
 {
@@ -53,7 +52,6 @@ public:
 	{}
 	virtual bool Test(Robot* exeRob) { return true; }
 	virtual void Do(Robot* exeRob, xhn::static_string sender);
-	virtual euint GetSelfSize();
 };
 class mem_detach_command : public RobotCommand
 {
@@ -68,7 +66,6 @@ public:
 	{}
 	virtual bool Test(Robot* exeRob) { return true; }
 	virtual void Do(Robot* exeRob, xhn::static_string sender);
-	virtual euint GetSelfSize();
 };
     
 class scan_orphan_node_action : public Action
@@ -123,7 +120,9 @@ public:
 		return s_garbage_collect_robot;
 	}
     vptr alloc ( euint size ) {
-        return MemAllocator_alloc(m_mem_allocator, size, false);
+        ///return MemAllocator_alloc(m_mem_allocator, size, false);
+		///return malloc(size);
+		return Malloc(size);
 	}
 	void insert ( const vptr p, euint s, const char* n, destructor d ) {
 		mem_btree_node* node = m_btree.insert((vptr)p, s, n, d);
@@ -131,7 +130,9 @@ public:
 	}
 	void remove ( const vptr p ) {
 		if (m_btree.remove((vptr)p)) {
-            MemAllocator_free(m_mem_allocator, p);
+            ///MemAllocator_free(m_mem_allocator, p);
+			///free(p);
+			return Mfree(p);
 		}
 	}
 	void attach ( const vptr section, vptr mem ) {
@@ -344,14 +345,19 @@ class sender_robot : public Robot
     DeclareRTTI;
 public:
     SafedBuffer* m_channel;
+	euint64 m_nonblockingCount;
+	euint64 m_blockingCount;
 public:
     sender_robot()
     : m_channel(NULL)
+	, m_nonblockingCount(0)
+	, m_blockingCount(0)
     {};
 	void create ( const vptr mem, euint size, const char* name, destructor dest );
 	void attach ( const vptr section, vptr mem );
 	void detach ( const vptr section, vptr mem );
 	virtual xhn::static_string GetName() { return COMMAND_SENDER; }
+	float get_blockrate();
 };
     
 template <class T>
@@ -476,10 +482,13 @@ public:
 		new(ptr) T();
 		return mem_handle<T>((T*)ptr);
 	}
+	float get_blockrate() {
+		return m_sender->get_blockrate();
+	}
 };
 }
 
-#define GC_ALLOC(t) xhn::garbage_collector::get()->alloc<t>(__FILE__, __LINE__, NULL)
+#define GC_ALLOC(t, s) xhn::garbage_collector::get()->alloc<t>(__FILE__, __LINE__, s)
 #endif
 
 /**

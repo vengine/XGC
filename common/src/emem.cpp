@@ -13,7 +13,7 @@
 #include "elog.h"
 #include "eassert.h"
 
-///#define USE_C_MALLOC
+#define USE_C_MALLOC
 #ifndef __APPLE__
 #include <malloc.h>
 #else
@@ -126,6 +126,8 @@ typedef struct _mem_pool_node
     mem_node* head;
 	euint num_chks;
 	euint chk_cnt;
+    struct _mem_pool_node* next;
+	struct _mem_pool_node* prev;
 } mem_pool_node;
 
 mem_pool_node allco_mem_pool_node(euint _chk_size, euint _num_chks)
@@ -134,6 +136,8 @@ mem_pool_node allco_mem_pool_node(euint _chk_size, euint _num_chks)
     ret.mem_list = alloc_mem_list(_chk_size, _num_chks, &ret.real_chk_size, &ret.begin, &ret.end, &ret.head);
 	ret.num_chks = _num_chks;
 	ret.chk_cnt = _num_chks;
+	ret.next = NULL;
+	ret.prev = NULL;
     return ret;
 }
 
@@ -199,6 +203,7 @@ void dealloc(mem_pool_node* _node, void* _ptr)
 {
     mem_node* n = NULL;
     EAssert(is_from(_node, _ptr), "invalid memory node!");
+	meminit(_ptr, _node->real_chk_size);
     n = (mem_node*)_ptr;
     if (_node->head)
     {
@@ -459,6 +464,8 @@ typedef struct _mem_allocator
 	ELock elock;
     euint32 test_mark;
 	euint alloced_mem_size;
+	mem_pool_node* head;
+	mem_pool_node* tail;
 } mem_allocator;
 
 typedef struct _alloc_info
@@ -493,6 +500,8 @@ MemAllocator MemAllocator_new()
 	ELock_Init(&ret.self->elock);
     ret.self->test_mark = (euint32)rand();
 	ret.self->alloced_mem_size = 0;
+	ret.self->head = NULL;
+	ret.self->tail = NULL;
 	return ret;
 }
 void MemAllocator_delete(MemAllocator _self)
@@ -525,6 +534,22 @@ void* MemAllocator_alloc(MemAllocator _self, euint _size, bool _is_safe_alloc)
 		ainfo.mem_pool = mp;
 		ainfo.iter = iter;
 
+        var data = List_get_value(iter);
+		MemPoolNode node = {(struct _mem_pool_node*)data.vptr_var};
+		
+		if (node.self != _self.self->tail)
+		{
+			if (node.self == _self.self->head) { _self.self->head = node.self->next; }
+			if (node.self->prev)               { node.self->prev->next = node.self->next; }
+			if (node.self->next)               { node.self->next->prev = node.self->prev; }
+			node.self->next = NULL;
+			node.self->prev = _self.self->tail;
+			if (_self.self->tail)
+				_self.self->tail->next = node.self;
+			_self.self->tail = node.self;
+			if (!_self.self->head)
+				_self.self->head = node.self;
+		}
 		_self.self->alloced_mem_size += MemPool_chunk_size(mp);
 	}
 	else
@@ -805,6 +830,9 @@ vptr SEalloc(euint _size)
 	return MemAllocator_salloc(g_MemAllocator, _size);
 #endif
 }
+#if defined(_WIN32) || defined(_WIN64)
+#include "crtdbg.h"
+#endif
 void Efree(vptr _ptr)
 {
 #ifdef USE_C_MALLOC

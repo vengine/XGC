@@ -40,7 +40,7 @@ public:
 public:
 	void PushBack(int value) {
         ListNodeHandle node;
-		node = GC_ALLOC(ListNode);
+		node = GC_ALLOC(ListNode, sss[value]);
 		node->m_value = value;
 		if (m_tail) {
             m_tail->m_next = node;
@@ -67,41 +67,45 @@ public:
 typedef xhn::garbage_collector::mem_handle<List> ListHandle;
 int main(void)
 {
-	int* ttt = (int*)Malloc(sizeof(int));
-	int* ttt1 = (int*)Malloc(sizeof(int));
     xhn::IntHandle intHandle;
-    intHandle = GC_ALLOC(int);
+    intHandle = GC_ALLOC(int, "intHandle");
     *intHandle = 0;
 	while (1)
+	///for (int i = 0; i < 10000; i++)
 	{
 		xhn::TestObjectHandle handle;
-		handle = GC_ALLOC(xhn::TestObject);
-		handle->handle0 = GC_ALLOC(int);
-		handle->handle1 = GC_ALLOC(int);
+		handle = GC_ALLOC(xhn::TestObject, "TestObject");
+		handle->handle0 = GC_ALLOC(int, "handle0");
+		handle->handle1 = GC_ALLOC(int, "handle1");
 		
 		*handle->handle0 = 100;
 		*handle->handle1 = 200;
-		handle->handle2 = GC_ALLOC(float);
+		handle->handle2 = GC_ALLOC(float, "handle2");
 
 		*handle->handle2 = (float)(*handle->handle0 + *handle->handle1);
 		handle->hh = handle;
 		ListHandle list;
 		ListNodeHandle iter;
-        GC_ALLOC(List);
-		list = GC_ALLOC(List);
+        GC_ALLOC(List, "List0");
+		list = GC_ALLOC(List, "List");
 		
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 4; i++) {
 			list->PushBack(i);
 		}
 		///list->Print();
         (*intHandle)++;
-		printf("count %d\n", *intHandle);
-		/**
-		if (*intHandle > 1000) {
-			Sleep(100);
-			*intHandle = 0;
+		///printf("count %d\n", *intHandle);
+		
+		if ((*intHandle % 10000) == 0) {
+			///Sleep(100);
+			float blockrate = xhn::garbage_collector::get()->get_blockrate();
+			printf("blockrate %f\n", blockrate);
+			///printf("gc alloc 100000\n");
+			///*intHandle = 0;
 		}
-		**/
+		if ((*intHandle % 25) == 0) {
+			Sleep(1);
+		}
     }
 	while(1) {}
 	return 0;

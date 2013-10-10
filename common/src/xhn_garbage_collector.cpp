@@ -26,37 +26,19 @@ void xhn::mem_create_command::Do(Robot* exeRob, xhn::static_string sender)
     garbage_collect_robot* gcRobot = exeRob->DynamicCast<garbage_collect_robot>();
 	gcRobot->insert(mem, size, name, dest);
 }
-euint xhn::mem_create_command::GetSelfSize()
-{
-    return sizeof(mem_create_command);
-}
 void xhn::mem_attatch_command::Do(Robot* exeRob, xhn::static_string sender)
 {
     garbage_collect_robot* gcRobot = exeRob->DynamicCast<garbage_collect_robot>();
 	gcRobot->attach(section, mem);
-}
-euint xhn::mem_attatch_command::GetSelfSize()
-{
-	return sizeof(mem_attatch_command);
 }
 void xhn::mem_detach_command::Do(Robot* exeRob, xhn::static_string sender)
 {
 	garbage_collect_robot* gcRobot = exeRob->DynamicCast<garbage_collect_robot>();
 	gcRobot->detach(section, mem);
 }
-euint xhn::mem_detach_command::GetSelfSize()
-{
-	return sizeof(mem_detach_command);
-}
 
 void xhn::scan_orphan_node_action::DoImpl()
-{
-	/**
-	if (garbage_collect_robot::get()->get_alloced_mem_size() < (64 * 1024))
-		garbage_collect_robot::get()->m_isSingleCommandMode = false;
-	else
-		garbage_collect_robot::get()->m_isSingleCommandMode = true;
-	**/
+{	
 	{
         garbage_collect_robot::get()->scan_orphan_nodes(garbage_collect_robot::get()->command_count);
         garbage_collect_robot::get()->command_count = 0;
@@ -81,29 +63,56 @@ void xhn::sender_robot::create ( const vptr mem, euint size, const char* name, d
     if (!m_channel) {
         m_channel = RobotManager::Get()->GetChannel(GetName(), COMMAND_RECEIVER);
     }
+#ifdef USE_COMMAND_PTR
+	mem_create_command* cmd = ENEW mem_create_command(mem, size, name, dest);
+    while (!m_channel->Write(cmd));
+#else
 	mem_create_command cmd(mem, size, name, dest);
-	///RobotManager::Get()->SendCommand(m_channel, cmd);
-	while (!m_channel->Write(cmd));
+	while (!m_channel->Write(cmd)) {
+		m_blockingCount++;
+	}
+	m_nonblockingCount++;
+#endif
 }
 void xhn::sender_robot::attach ( const vptr section, vptr mem )
 {
     if (!m_channel) {
         m_channel = RobotManager::Get()->GetChannel(GetName(), COMMAND_RECEIVER);
     }
-    mem_attatch_command cmd(section, mem);
-	///RobotManager::Get()->SendCommand(m_channel, cmd);
+#ifdef USE_COMMAND_PTR
+	mem_attatch_command* cmd = ENEW mem_attatch_command(section, mem);
 	while (!m_channel->Write(cmd));
+#else
+    mem_attatch_command cmd(section, mem);
+	while (!m_channel->Write(cmd)) {
+		m_blockingCount++;
+	}
+	m_nonblockingCount++;
+#endif
 }
 void xhn::sender_robot::detach ( const vptr section, vptr mem )
 {
     if (!m_channel) {
         m_channel = RobotManager::Get()->GetChannel(GetName(), COMMAND_RECEIVER);
     }
-	mem_detach_command cmd(section, mem);
-	///RobotManager::Get()->SendCommand(m_channel, cmd);
+#ifdef USE_COMMAND_PTR
+	mem_detach_command* cmd = ENEW mem_detach_command(section, mem);
 	while (!m_channel->Write(cmd));
+#else
+	mem_detach_command cmd(section, mem);
+	while (!m_channel->Write(cmd)) {
+		m_blockingCount++;
+	}
+	m_nonblockingCount++;
+#endif
 }
-
+float xhn::sender_robot::get_blockrate()
+{
+    float ret = (float)((double)m_blockingCount / (double)(m_blockingCount + m_nonblockingCount));
+	m_blockingCount = 0;
+	m_nonblockingCount = 0;
+	return ret;
+}
 xhn::garbage_collector* xhn::garbage_collector::s_garbage_collector = NULL;
 RobotThread* xhn::garbage_collector::s_garbage_collect_robot_thread = NULL;
 
