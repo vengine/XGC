@@ -435,7 +435,7 @@ public:
             return *m_ptr;
         }
         operator bool () const {
-            return (bool)m_ptr;
+            return m_ptr != NULL;
         }
     };
 private:
@@ -471,7 +471,7 @@ public:
 };
 }
 
-#define GC_ALLOC(t, s) xhn::garbage_collector::get()->alloc<t>(__FILE__, __LINE__, s)
+#define GC_ALLOC(t) xhn::garbage_collector::get()->alloc<t>(__FILE__, __LINE__, NULL)
 #endif
 
 /**
