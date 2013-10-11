@@ -67,18 +67,74 @@ struct TestObject
 	xhn::garbage_collector::mem_handle<TestObject> hh;
 };
 typedef xhn::garbage_collector::mem_handle<TestObject> TestObjectHandle;
-int main(void)
+
+void test0() 
 {
-    IntHandle intHandle;
-    intHandle = GC_ALLOC(int);
-    *intHandle = 0;
+	IntHandle intHandle;
+	intHandle = GC_ALLOC(int);
+	*intHandle = 0;
+	while(1) {
+		TestObjectHandle testHandle0;
+		TestObjectHandle testHandle1;
+
+		testHandle0 = GC_ALLOC(TestObject);
+
+		testHandle0->handle0 = GC_ALLOC(int);
+		testHandle0->handle1 = GC_ALLOC(int);
+		{
+			FloatHandle floatTest0;
+			FloatHandle floatTest1;
+			FloatHandle floatTest2;
+
+			floatTest0 = GC_ALLOC(float);
+			floatTest1 = GC_ALLOC(float);
+			floatTest2 = GC_ALLOC(float);
+			*floatTest0 = 32.0f;
+			*floatTest1 = 24.0f;
+			*floatTest2 = *floatTest0 * *floatTest1;
+			testHandle0->handle2 = floatTest2;
+
+			TestObjectHandle ttt;
+			ttt = GC_ALLOC(TestObject);
+			ttt->hh = GC_ALLOC(TestObject);
+			testHandle0->hh = ttt;
+		}
+
+		testHandle1 = GC_ALLOC(TestObject);
+
+		testHandle1->handle0 = GC_ALLOC(int);
+		testHandle1->handle1 = GC_ALLOC(int);
+		testHandle1->hh = GC_ALLOC(TestObject);
+
+		testHandle1->hh->handle0 = GC_ALLOC(int);
+		testHandle1->hh->handle1 = GC_ALLOC(int);
+
+		testHandle1->hh->hh = GC_ALLOC(TestObject);
+
+		testHandle0->hh = testHandle1;
+		testHandle1->hh = testHandle0;
+
+		(*intHandle)++;
+
+		if ((*intHandle % 10000) == 0) {
+			float blockrate = xhn::garbage_collector::get()->get_blockrate();
+			printf("blockrate %f\n", blockrate);
+		}
+	}
+}
+
+void test1()
+{
+	IntHandle intHandle;
+	intHandle = GC_ALLOC(int);
+	*intHandle = 0;
 	while (1)
 	{
 		TestObjectHandle handle;
 		handle = GC_ALLOC(TestObject);
 		handle->handle0 = GC_ALLOC(int);
 		handle->handle1 = GC_ALLOC(int);
-		
+
 		*handle->handle0 = 100;
 		*handle->handle1 = 200;
 		handle->handle2 = GC_ALLOC(float);
@@ -87,19 +143,23 @@ int main(void)
 		handle->hh = handle;
 		ListHandle list;
 		ListNodeHandle iter;
-        GC_ALLOC(List);
+		GC_ALLOC(List);
 		list = GC_ALLOC(List);
-		
+
 		for (int i = 0; i < 4; i++) {
 			list->PushBack(i);
 		}
-        (*intHandle)++;
-		
+		(*intHandle)++;
+
 		if ((*intHandle % 10000) == 0) {
 			float blockrate = xhn::garbage_collector::get()->get_blockrate();
 			printf("blockrate %f\n", blockrate);
 		}
-    }
-	while(1) {}
+	}
+}
+
+int main(void)
+{
+	test0();
 	return 0;
 }
