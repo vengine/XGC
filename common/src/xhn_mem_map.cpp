@@ -83,7 +83,6 @@ void xhn::mem_btree_node::AttchToRoot() {
 void xhn::mem_btree_node::DetachFromRoot() {
 	root_ref_count--;
 	EAssert(root_ref_count >= 0, "count must greater or equal zero");
-	///TrackBack();
 }
 void xhn::mem_btree_node::MakeNotGarbage()
 {

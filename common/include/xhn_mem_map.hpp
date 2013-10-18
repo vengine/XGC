@@ -231,10 +231,10 @@ namespace xhn
 			///if (node->next) { node->next->prev = node->prev; }
             track_buffer[0] = node;
             
-            if (node->dest) {
-                node->dest(node->begin_addr);
-            }
-            
+			if (node->dest) {
+				node->dest(node->begin_addr);
+			}
+
             for (euint i = 1; i < num_bytes * 2 + 1; i++) {
                 mem_btree_node* next = track_buffer[i];
                 mem_btree_node* prev = track_buffer[i - 1];

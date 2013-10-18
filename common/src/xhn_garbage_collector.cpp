@@ -70,6 +70,10 @@ void xhn::sender_robot::create ( const vptr mem, euint size, const char* name, d
 	mem_create_command cmd(mem, size, name, dest);
 	m_channel->Write(cmd);
 #endif
+#ifdef GC_DEBUG
+	garbage_collect_robot::get()->DoAction();
+	garbage_collect_robot::get()->DoAction();
+#endif
 }
 void xhn::sender_robot::attach ( const vptr section, vptr mem )
 {
@@ -83,6 +87,10 @@ void xhn::sender_robot::attach ( const vptr section, vptr mem )
     mem_attatch_command cmd(section, mem);
 	m_channel->Write(cmd);
 #endif
+#ifdef GC_DEBUG
+	garbage_collect_robot::get()->DoAction();
+	garbage_collect_robot::get()->DoAction();
+#endif
 }
 void xhn::sender_robot::detach ( const vptr section, vptr mem )
 {
@@ -95,6 +103,10 @@ void xhn::sender_robot::detach ( const vptr section, vptr mem )
 #else
 	mem_detach_command cmd(section, mem);
 	m_channel->Write(cmd);
+#endif
+#ifdef GC_DEBUG
+	garbage_collect_robot::get()->DoAction();
+	garbage_collect_robot::get()->DoAction();
 #endif
 }
 float xhn::sender_robot::get_blockrate()
@@ -127,12 +139,13 @@ xhn::garbage_collector::garbage_collector()
 	gc_rob->AddAction(smna);
 
 	RobotManager::Get()->MakeChannel(COMMAND_SENDER, COMMAND_RECEIVER);
-
+#ifndef GC_DEBUG
     if (!s_garbage_collect_robot_thread) {
 	    RobotThreadManager::Init();
 	    s_garbage_collect_robot_thread = RobotThreadManager::Get()->AddRobotThread(gc_rob);
         s_garbage_collect_robot_thread->SetSleepNanoSecond(0);
     }
+#endif
 }
 xhn::garbage_collector::~garbage_collector()
 {}
@@ -144,7 +157,9 @@ vptr xhn::garbage_collector::alloc(euint size,
 {
     vptr ret = garbage_collect_robot::get()->alloc(size);
 	if (ret) {
+#ifndef GC_DEBUG
 		SpinLock::Instance inst = m_senderLock.Lock();
+#endif
 		m_sender->create(ret, size, _name, dest);
 	}
 	return ret;
@@ -152,13 +167,17 @@ vptr xhn::garbage_collector::alloc(euint size,
 
 void xhn::garbage_collector::attach(vptr section, vptr mem)
 {
+#ifndef GC_DEBUG
 	SpinLock::Instance inst = m_senderLock.Lock();
+#endif
     m_sender->attach(section, mem);
 }
 
 void xhn::garbage_collector::detach(vptr section, vptr mem)
 {
+#ifndef GC_DEBUG
 	SpinLock::Instance inst = m_senderLock.Lock();
+#endif
 	m_sender->detach(section, mem);
 }
 

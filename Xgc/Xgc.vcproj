@@ -310,6 +310,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\common\include\xhn_config.hpp"
+					>
+				</File>
+				<File
 					RelativePath="..\common\include\xhn_exception.hpp"
 					>
 				</File>

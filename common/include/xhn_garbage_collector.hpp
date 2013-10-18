@@ -13,6 +13,7 @@
 #include "common.h"
 #include "etypes.h"
 #include "emem.h"
+#include "xhn_config.hpp"
 #include "xhn_mem_map.hpp"
 #include "xhn_lock.hpp"
 #include "../../framework/include/robot.h"
@@ -107,7 +108,11 @@ public:
 	, root_head(NULL)
 	, root_tail(NULL)
     , command_count(0)
+#ifdef PRINT_ATTACH_INFO
+	, m_isDebugging(true)
+#else
     , m_isDebugging(false)
+#endif
 	{
 		s_garbage_collect_robot = this;
         m_mem_allocator = MemAllocator_new();
@@ -120,9 +125,15 @@ public:
 		return s_garbage_collect_robot;
 	}
     vptr alloc ( euint size ) {
-        ///return MemAllocator_alloc(m_mem_allocator, size, false);
-		///return malloc(size);
-		return Malloc(size);
+		vptr ret = Malloc(size);
+#ifdef PRINT_ALLOC_INFO
+    #if BIT_WIDTH == 32 
+		printf("alloc %x\n", (ref_ptr)ret);
+    #else
+		printf("alloc %llx\n", (ref_ptr)ret);
+    #endif
+#endif
+		return ret;
 	}
 	void insert ( const vptr p, euint s, const char* n, destructor d ) {
 		mem_btree_node* node = m_btree.insert((vptr)p, s, n, d);
@@ -130,8 +141,13 @@ public:
 	}
 	void remove ( const vptr p ) {
 		if (m_btree.remove((vptr)p)) {
-            ///MemAllocator_free(m_mem_allocator, p);
-			///free(p);
+#ifdef PRINT_ALLOC_INFO
+    #if BIT_WIDTH == 32 
+			printf("free %x\n", (ref_ptr)p);
+    #else
+			printf("free %llx\n", (ref_ptr)p);
+    #endif
+#endif
 			return Mfree(p);
 		}
 	}
@@ -147,22 +163,12 @@ public:
                     printf("%s root ref count is %d\n",
                            node->name,
                            (euint32)node->root_ref_count);
-					/**
-                    printf("%s number of input links is %d\n",
-                           node->name,
-                           (euint32)node->input_map.size());
-						   **/
                     printf("%s number of output links is %d\n",
                            node->name,
                            (euint32)node->output_map.size());
                     printf("%s root ref count is %d\n",
                            parent->name,
                            (euint32)parent->root_ref_count);
-					/**
-                    printf("%s number of input links is %d\n",
-                           parent->name,
-                           (euint32)parent->input_map.size());
-						   **/
                     printf("%s number of output links is %d\n",
                            parent->name,
                            (euint32)parent->output_map.size());
@@ -177,11 +183,6 @@ public:
                     printf("%s root ref count is %d\n",
                            node->name,
                            (euint32)node->root_ref_count);
-					/**
-                    printf("%s number of input links is %d\n",
-                           node->name,
-                           (euint32)node->input_map.size());
-						   **/
                     printf("%s number of output links is %d\n",
                            node->name,
                            (euint32)node->output_map.size());
@@ -203,22 +204,12 @@ public:
                     printf("%s root ref count is %d\n",
                            node->name,
                            (euint32)node->root_ref_count);
-					/**
-                    printf("%s number of input links is %d\n",
-                           node->name,
-                           (euint32)node->input_map.size());
-						   **/
                     printf("%s number of output links is %d\n",
                            node->name,
                            (euint32)node->output_map.size());
                     printf("%s root ref count is %d\n",
                            parent->name,
                            (euint32)parent->root_ref_count);
-					/**
-                    printf("%s number of input links is %d\n",
-                           parent->name,
-                           (euint32)parent->input_map.size());
-						   **/
                     printf("%s number of output links is %d\n",
                            parent->name,
                            (euint32)parent->output_map.size());
@@ -233,11 +224,6 @@ public:
                     printf("%s root ref count is %d\n",
                            node->name,
                            (euint32)node->root_ref_count);
-					/**
-                    printf("%s number of input links is %d\n",
-                           node->name,
-                           (euint32)node->input_map.size());
-						   **/
                     printf("%s number of output links is %d\n",
                            node->name,
                            (euint32)node->output_map.size());
@@ -356,10 +342,16 @@ public:
 	float get_blockrate();
 };
     
+/// 如果一个mem_node带有析构函数，且该mem_node下挂载了一个mem_handle
+/// 则析构函数调用时机就十分重要
+/// 若在从mem_map里删除mem_node时调用析构函数，则有可能在删除mem_node时触发另一次mem_node删除
+/// 若该mem_node和父mem_node相同，则会导致一个mem_node被删除两次
+/// 若在mem_node删除完毕后调用析构函数，则在查找mem_handle的父mem_node时会找不到，则视为从root上detach
+/// 也会出问题
 template <class T>
 void gc_destructor(T* ptr)
 {
-    ptr->T::~T();
+    //ptr->T::~T();
 };
 
 class garbage_collector : public MemObject
@@ -401,8 +393,6 @@ public:
         {}
         ~mem_handle()
         {
-            if (is_garbage_collect_robot_thread())
-                return;
             if (m_is_transfer) {
                 return;
             }
@@ -418,8 +408,9 @@ public:
                 garbage_collector::get()->detach((vptr)this, (vptr)m_ptr);
             }
             m_ptr = ptr.m_ptr;
-			if (ptr.m_ptr)
+			if (ptr.m_ptr) {
                 garbage_collector::get()->attach((vptr)this, (vptr)ptr.m_ptr);
+			}
             return *this;
         }
         T* operator ->() {
