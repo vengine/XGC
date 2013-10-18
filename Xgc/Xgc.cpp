@@ -158,8 +158,43 @@ void test1()
 	}
 }
 
+typedef xhn::garbage_collector::array<int> IntArray;
+typedef xhn::garbage_collector::array<TestObject> TestArray;
+
+void test2()
+{
+	IntHandle intHandle;
+	intHandle = GC_ALLOC(int);
+	*intHandle = 0;
+	while (1)
+	{
+		IntArray intArray;
+		intArray = GC_ALLOC_ARRAY(int, 100);
+		intArray[0] = GC_ALLOC(int);
+		intArray[1] = GC_ALLOC(int);
+		intArray[2] = GC_ALLOC(int);
+		intArray[0] = 100;
+		intArray[1] = 200;
+		intArray[2] = 100;
+
+		TestArray testArray;
+		testArray = GC_ALLOC_ARRAY(TestObject, 5);
+		for (euint i = 0; i < testArray.size(); i++) {
+			testArray[0].handle0 = GC_ALLOC(int);
+			*testArray[0].handle0 = 100;
+		}
+
+		(*intHandle)++;
+
+		if ((*intHandle % 10000) == 0) {
+			float blockrate = xhn::garbage_collector::get()->get_blockrate();
+			printf("blockrate %f\n", blockrate);
+		}
+	}
+}
+
 int main(void)
 {
-	test0();
+	test2();
 	return 0;
 }

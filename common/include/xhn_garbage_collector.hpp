@@ -610,6 +610,84 @@ public:
             return m_ptr != NULL;
         }
     };
+	template<typename T>
+	class array
+	{
+		friend class garbage_collector;
+	private:
+		euint m_element_count;
+        T* m_elements;
+		bool m_is_transfer;
+	private:
+		explicit array(T* arr, euint ele_cnt)
+			: m_element_count(ele_cnt)
+		    , m_elements(arr)
+			, m_is_transfer(true)
+		{
+			for (euint i = 0; i < ele_cnt; i++) {
+				new(&arr[i]) T();
+			}
+		}
+		array(const array<T>& arr)
+			: m_element_count(arr.m_element_count)
+		    , m_elements((T*)arr.m_elements)
+			, m_is_transfer(false)
+		{
+			if (m_elements == arr.m_elements)
+				return;
+			if (m_elements) {
+				garbage_collector::get()->detach((vptr)this, (vptr)m_elements);
+			}
+			m_elements = arr.m_elements;
+			garbage_collector::get()->attach((vptr)this, (vptr)arr.m_elements);
+		}
+	public:
+		bool is_transfer() {
+			return m_is_transfer;
+		}
+		explicit array()
+			: m_elements(NULL)
+			, m_is_transfer(false)
+		{}
+		~array()
+		{
+#ifndef GC_DEBUG
+			if (is_garbage_collect_robot_thread())
+				return;
+#endif
+			if (m_is_transfer) {
+				return;
+			}
+			if (m_elements) {
+				garbage_collector::get()->detach((vptr)this, (vptr)m_elements);
+			}
+			m_elements = NULL;
+		}
+		const array& operator = (const array& ptr) {
+			if (m_elements == ptr.m_elements)
+				return *this;
+			if (m_elements) {
+				garbage_collector::get()->detach((vptr)this, (vptr)m_elements);
+			}
+			m_elements = ptr.m_elements;
+			m_element_count = ptr.m_element_count;
+			if (ptr.m_elements) {
+				garbage_collector::get()->attach((vptr)this, (vptr)ptr.m_elements);
+			}
+			return *this;
+		}
+		T& operator[] (euint index) {
+			EAssert(m_elements, "array is NULL");
+			EAssert(index < m_element_count, "array index out of bounds");
+			return m_elements[index];
+		}
+		operator bool () const {
+			return m_elements != NULL;
+		}
+		euint size() const {
+            return m_element_count;
+		}
+	};
 private:
 	static garbage_collector* s_garbage_collector;
     static RobotThread* s_garbage_collect_robot_thread;
@@ -637,6 +715,11 @@ public:
 		new(ptr) T();
 		return mem_handle<T>((T*)ptr);
 	}
+	template <typename T>
+	array<T> alloc_array(euint size, const char* _file, euint32 _line, const char* _name) {
+		vptr ptr = alloc(sizeof(T) * size, _file, _line, _name, NULL);
+		return array<T>((T*)ptr, size);
+	}
 	float get_blockrate() {
 		return m_sender->get_blockrate();
 	}
@@ -644,6 +727,7 @@ public:
 }
 
 #define GC_ALLOC(t) xhn::garbage_collector::get()->alloc<t>(__FILE__, __LINE__, NULL)
+#define GC_ALLOC_ARRAY(t, s) xhn::garbage_collector::get()->alloc_array<t>(s, __FILE__, __LINE__, NULL)
 #endif
 
 /**
