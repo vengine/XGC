@@ -143,6 +143,9 @@ namespace xhn
 		vptr get() {
 			return m_begin_addr;
 		}
+		const vptr get() const {
+			return m_begin_addr;
+		}
 	};
 }
 #endif

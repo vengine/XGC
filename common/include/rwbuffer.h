@@ -41,7 +41,11 @@ public:
         }
         m_nonblockingCount++;
     }
+	void Write(const void* buf, euint size);
     char* Read(euint* readSize);
+	inline bool IsEmpty() {
+		return RWBuffer_IsEmpty(m_buffer);
+	}
     inline float GetBlockrate()
     {
         float ret = (float)((double)m_blockingCount / (double)(m_blockingCount + m_nonblockingCount));
