@@ -195,6 +195,6 @@ void test2()
 
 int main(void)
 {
-	test2();
+	test1();
 	return 0;
 }

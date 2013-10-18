@@ -109,6 +109,13 @@ void Robot::CommandProc()
 		}
 	}
 }
+
+void Robot::DoAction() {
+	ActionPtr act = GetCurrnetAction();
+	if (act.get()) act->Do();
+	Next();
+	CommandProc();
+}
 ///**********************************************************************///
 ///                       class implement end                            ///
 ///**********************************************************************///

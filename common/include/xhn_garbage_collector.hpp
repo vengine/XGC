@@ -500,6 +500,7 @@ public:
 	}
 	virtual bool CommandProcImpl(xhn::static_string sender, RobotCommand* command);
 	virtual bool CommandReceiptProcImpl(xhn::static_string sender, RobotCommandReceipt* receipt) { return true; }
+	virtual void DoAction();
 	virtual xhn::static_string GetName() { return COMMAND_RECEIVER; }
 };
 

@@ -135,12 +135,7 @@ public:
 		}
 		return ret;
 	}
-	inline void DoAction() {
-		ActionPtr act = GetCurrnetAction();
-		if (act.get()) act->Do();
-		Next();
-		CommandProc();
-	}
+	virtual void DoAction();
 };
 ///**********************************************************************///
 ///                       class define end                               ///

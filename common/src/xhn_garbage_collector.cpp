@@ -116,6 +116,16 @@ float xhn::sender_robot::get_blockrate()
     else
         return 0.0f;
 }
+
+void xhn::garbage_collect_robot::DoAction()
+{
+	ActionPtr act = GetCurrnetAction();
+	for (int i = 0; i < 10; i++) CommandProc();
+	if (act.get()) act->Do();
+	for (int i = 0; i < 10; i++) CommandProc();
+	Next();
+}
+
 xhn::garbage_collector* xhn::garbage_collector::s_garbage_collector = NULL;
 RobotThread* xhn::garbage_collector::s_garbage_collect_robot_thread = NULL;
 
