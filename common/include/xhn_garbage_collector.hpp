@@ -157,37 +157,125 @@ public:
 			mem_btree_node* parent = m_btree.find(section);
 			if (parent) {
 				parent->Attach(section, node);
+#ifdef GC_DEBUG
                 if (m_isDebugging) {
                     printf("##Attach begin##\n");
-                    printf("%s attach to the %s\n", node->name, parent->name);
-                    printf("%s root ref count is %d\n",
-                           node->name,
-                           (euint32)node->root_ref_count);
-                    printf("%s number of output links is %d\n",
-                           node->name,
-                           (euint32)node->output_map.size());
-                    printf("%s root ref count is %d\n",
-                           parent->name,
-                           (euint32)parent->root_ref_count);
-                    printf("%s number of output links is %d\n",
-                           parent->name,
-                           (euint32)parent->output_map.size());
+					if (node->name && parent->name) {
+                        printf("%s attach to the %s\n", node->name, parent->name);
+						printf("%s root ref count is %d\n",
+							node->name,
+							(euint32)node->root_ref_count);
+						printf("%s number of output links is %d\n",
+							node->name,
+							(euint32)node->output_map.size());
+						printf("%s root ref count is %d\n",
+							parent->name,
+							(euint32)parent->root_ref_count);
+						printf("%s number of input links is %d\n",
+							parent->name,
+							(euint32)parent->input_set.size());
+						printf("%s number of output links is %d\n",
+							parent->name,
+							(euint32)parent->output_map.size());
+					}
+					else {
+#if BIT_WIDTH == 32
+						printf("%x attach to the %x\n", 
+							(ref_ptr)node->begin_addr, 
+							(ref_ptr)parent->begin_addr);
+						printf("%x root ref count is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->root_ref_count);
+						printf("%x number of input links is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->input_set.size());
+						printf("%x number of output links is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->output_map.size());
+						printf("%x root ref count is %d\n",
+							(ref_ptr)parent->begin_addr,
+							(euint32)parent->root_ref_count);
+						printf("%x number of input links is %d\n",
+							(ref_ptr)parent->begin_addr,
+							(euint32)parent->input_set.size());
+						printf("%x number of output links is %d\n",
+							(ref_ptr)parent->begin_addr,
+							(euint32)parent->output_map.size());
+#else
+						printf("%llx attach to the %llx\n", 
+							(ref_ptr)node->begin_addr, 
+							(ref_ptr)parent->begin_addr);
+						printf("%llx root ref count is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->root_ref_count);
+						printf("%llx number of input links is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->input_set.size());
+						printf("%llx number of output links is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->output_map.size());
+						printf("%llx root ref count is %d\n",
+							(ref_ptr)parent->begin_addr,
+							(euint32)parent->root_ref_count);
+						printf("%llx number of input links is %d\n",
+							(ref_ptr)parent->begin_addr,
+							(euint32)parent->input_set.size());
+						printf("%llx number of output links is %d\n",
+							(ref_ptr)parent->begin_addr,
+							(euint32)parent->output_map.size());
+#endif
+					}
                     printf("##Attach end##\n");
                 }
+#endif
 			}
 			else {
 				node->AttchToRoot();
+#ifdef GC_DEBUG
                 if (m_isDebugging) {
-                    printf("##Attach begin##\n");
-                    printf("%s attach to root\n", node->name);
-                    printf("%s root ref count is %d\n",
-                           node->name,
-                           (euint32)node->root_ref_count);
-                    printf("%s number of output links is %d\n",
-                           node->name,
-                           (euint32)node->output_map.size());
-                    printf("##Attach end##\n");
+					printf("##Attach begin##\n");
+					if (node->name) {
+						printf("%s attach to root\n", node->name);
+						printf("%s root ref count is %d\n",
+							node->name,
+							(euint32)node->root_ref_count);
+						printf("%s number of input links is %d\n",
+							node->name,
+							(euint32)node->input_set.size());
+						printf("%s number of output links is %d\n",
+							node->name,
+							(euint32)node->output_map.size());
+					}
+					else {
+#if BIT_WIDTH == 32
+						printf("%x attach to root\n", 
+							(ref_ptr)node->begin_addr);
+						printf("%x root ref count is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->root_ref_count);
+						printf("%x number of input links is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->input_set.size());
+						printf("%x number of output links is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->output_map.size());
+#else
+						printf("%llx attach to root\n", 
+							(ref_ptr)node->begin_addr);
+						printf("%llx root ref count is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->root_ref_count);
+						printf("%llx number of input links is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->input_set.size());
+						printf("%llx number of output links is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->output_map.size());
+#endif
+					}
+					printf("##Attach end##\n");
                 }
+#endif
 			}
             push_detach_node(node);
 		}
@@ -198,37 +286,126 @@ public:
 			mem_btree_node* parent = m_btree.find(section);
 			if (parent) {
 				parent->Detach(section, node);
+#ifdef GC_DEBUG
                 if (m_isDebugging) {
                     printf("##Detach begin##\n");
-                    printf("%s detach from the %s\n", node->name, parent->name);
-                    printf("%s root ref count is %d\n",
-                           node->name,
-                           (euint32)node->root_ref_count);
-                    printf("%s number of output links is %d\n",
-                           node->name,
-                           (euint32)node->output_map.size());
-                    printf("%s root ref count is %d\n",
-                           parent->name,
-                           (euint32)parent->root_ref_count);
-                    printf("%s number of output links is %d\n",
-                           parent->name,
-                           (euint32)parent->output_map.size());
+					if (node->name && parent->name) {
+						printf("%s detach from the %s\n", node->name, parent->name);
+						printf("%s root ref count is %d\n",
+							node->name,
+							(euint32)node->root_ref_count);
+						printf("%s number of input links is %d\n",
+							node->name,
+							(euint32)node->input_set.size());
+						printf("%s number of output links is %d\n",
+							node->name,
+							(euint32)node->output_map.size());
+						printf("%s root ref count is %d\n",
+							parent->name,
+							(euint32)parent->root_ref_count);
+						printf("%s number of input links is %d\n",
+							parent->name,
+							(euint32)parent->input_set.size());
+						printf("%s number of output links is %d\n",
+							parent->name,
+							(euint32)parent->output_map.size());
+					}
+					else {
+#if BIT_WIDTH == 32
+						printf("%x detach from the %x\n", 
+							(ref_ptr)node->begin_addr, 
+							(ref_ptr)parent->begin_addr);
+						printf("%x root ref count is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->root_ref_count);
+						printf("%x number of input links is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->input_set.size());
+						printf("%x number of output links is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->output_map.size());
+						printf("%x root ref count is %d\n",
+							(ref_ptr)parent->begin_addr,
+							(euint32)parent->root_ref_count);
+						printf("%x number of input links is %d\n",
+							(ref_ptr)parent->begin_addr,
+							(euint32)parent->input_set.size());
+						printf("%x number of output links is %d\n",
+							(ref_ptr)parent->begin_addr,
+							(euint32)parent->output_map.size());
+#else
+						printf("%llx detach from the %x\n", 
+							(ref_ptr)node->begin_addr, 
+							(ref_ptr)parent->begin_addr);
+						printf("%llx root ref count is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->root_ref_count);
+						printf("%llx number of input links is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->input_set.size());
+						printf("%llx number of output links is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->output_map.size());
+						printf("%llx root ref count is %d\n",
+							(ref_ptr)parent->begin_addr,
+							(euint32)parent->root_ref_count);
+						printf("%llx number of input links is %d\n",
+							(ref_ptr)parent->begin_addr,
+							(euint32)parent->input_set.size());
+						printf("%llx number of output links is %d\n",
+							(ref_ptr)parent->begin_addr,
+							(euint32)parent->output_map.size());
+#endif
+					}
                     printf("##Detach end##\n");
                 }
+#endif
 			}
 			else {
 				node->DetachFromRoot();
+#ifdef GC_DEBUG
                 if (m_isDebugging) {
                     printf("##Detach begin##\n");
-                    printf("%s detach from root\n", node->name);
-                    printf("%s root ref count is %d\n",
-                           node->name,
-                           (euint32)node->root_ref_count);
-                    printf("%s number of output links is %d\n",
-                           node->name,
-                           (euint32)node->output_map.size());
+					if (node->name) {
+						printf("%s detach from root\n", node->name);
+						printf("%s root ref count is %d\n",
+							node->name,
+							(euint32)node->root_ref_count);
+						printf("%s number of input links is %d\n",
+							node->name,
+							(euint32)node->input_set.size());
+						printf("%s number of output links is %d\n",
+							node->name,
+							(euint32)node->output_map.size());
+					}
+					else {
+#if BIT_WIDTH == 32
+						printf("%x detach from root\n", (ref_ptr)node->begin_addr);
+						printf("%x root ref count is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->root_ref_count);
+						printf("%x number of input links is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->input_set.size());
+						printf("%x number of output links is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->output_map.size());
+#else
+						printf("%llx detach from root\n", (ref_ptr)node->begin_addr);
+						printf("%llx root ref count is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->root_ref_count);
+						printf("%llx number of input links is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->input_set.size());
+						printf("%llx number of output links is %d\n",
+							(ref_ptr)node->begin_addr,
+							(euint32)node->output_map.size());
+#endif
+					}
                     printf("##Detach end##\n");
                 }
+#endif
 			}
 		}
 	}

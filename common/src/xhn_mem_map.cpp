@@ -14,21 +14,29 @@
 
 void xhn::mem_btree_node::Attach(const vptr handle, mem_btree_node* mem)
 {
-    input_pair ip = {this, (vptr)handle};
 	output_map.insert(xhn::make_pair(handle, mem));
+#ifdef GC_DEBUG
+	input_pair ip = {this, (vptr)handle};
+	mem->input_set.insert(ip);
+#endif
 }
 void xhn::mem_btree_node::Detach(const vptr handle, mem_btree_node* mem)
 {
-    input_pair ip = {this, (vptr)handle};
 	output_map.erase(handle);
+#ifdef GC_DEBUG
+	input_pair ip = {this, (vptr)handle};
+	mem->input_set.erase(ip);
+#endif
 	garbage_collect_robot::get()->push_detach_node(mem);
 }
 void xhn::mem_btree_node::AttchToRoot() {
 	root_ref_count++;
 }
 void xhn::mem_btree_node::DetachFromRoot() {
+	if (!root_ref_count)
+		return;
 	root_ref_count--;
-	EAssert(root_ref_count >= 0, "count must greater or equal zero");
+	///EAssert(root_ref_count >= 0, "count must greater or equal zero");
 }
 void xhn::mem_btree_node::MakeNotGarbage()
 {
@@ -39,8 +47,8 @@ void xhn::mem_btree_node::MakeNotGarbage()
 	mem_map::iterator end = output_map.end();
 	for (; iter != end; iter++) {
         mem_btree_node* node = iter->second;
-		node->is_garbage = false;
 		node->MakeNotGarbage();
+		node->is_garbage = false;
 	}
 }
 void xhn::mem_btree::push_detach_node(mem_btree_node* node)

@@ -54,7 +54,7 @@ void xhn::path_node::search(const wchar_t* path)
 		if (StrCmpW(fd.name, L".") != 0 && StrCmpW(fd.name, L"..") != 0)
 		{
 			path_node_ptr child;
-			child = ENEW path_node;
+			child = GC_ALLOC(path_node);
 			child->search((search_path + fd.name).c_str());
 			child->next = children;
 			children = child;
@@ -66,13 +66,13 @@ void xhn::path_node::search(const wchar_t* path)
 
 void xhn::path_node::get_paths(xhn::vector<xhn::wstring>& result)
 {
-	if (!children.get()) {
+	if (!children) {
 		result.push_back(path_name);
 		return;
 	}
     path_node_ptr child;
 	child = children;
-	while (child.get()) {
+	while (child) {
 		child->get_paths(result);
 		child = child->next;
 	}
@@ -80,7 +80,7 @@ void xhn::path_node::get_paths(xhn::vector<xhn::wstring>& result)
 
 xhn::path_tree::path_tree(const wchar_t* dir)
 {
-	root = ENEW path_node;
+	root = xhn::garbage_collector::get()->alloc<path_node>(__FILE__, __LINE__, "root");
 	root->search(dir);
 }
 

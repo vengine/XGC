@@ -28,30 +28,34 @@
 #include "xhn_atomic_operation.hpp"
 #include "rwbuffer.h"
 
+#include "xhn_config.hpp"
+
 namespace xhn
 {
     typedef void (*destructor) (void*);
     class mem_btree_node : public MemObject
     {
 	public:
-        struct input_pair
-        {
-            mem_btree_node* node;
-            vptr handle;
-            bool operator < (const input_pair& ip) const {
-                if ((ref_ptr)node < (ref_ptr)ip.node)
-                    return true;
-                else if ((ref_ptr)node > (ref_ptr)ip.node)
-                    return false;
-                else {
-                    if ((ref_ptr)handle < (ref_ptr)ip.handle)
-                        return true;
-                    else
-                        return false;
-                }
-            }
-        };
-        ///typedef map<input_pair, mem_btree_node*> input_mem_map;
+#ifdef GC_DEBUG
+		struct input_pair
+		{
+			mem_btree_node* node;
+			vptr handle;
+			bool operator < (const input_pair& ip) const {
+				if ((ref_ptr)node < (ref_ptr)ip.node)
+					return true;
+				else if ((ref_ptr)node > (ref_ptr)ip.node)
+					return false;
+				else {
+					if ((ref_ptr)handle < (ref_ptr)ip.handle)
+						return true;
+					else
+						return false;
+				}
+			}
+		};
+		typedef set<input_pair> input_mem_set;
+#endif
         typedef map<vptr, mem_btree_node*> mem_map;
 		typedef set<mem_btree_node*> mem_set;
     public:
@@ -61,7 +65,9 @@ namespace xhn
         euint32 num_children;
         vptr begin_addr;
         vptr end_addr;
-		///input_mem_map input_map;
+#ifdef GC_DEBUG
+		input_mem_set input_set;
+#endif
 		mem_map output_map;
 		esint32 root_ref_count;
 		mem_btree_node* prev;
