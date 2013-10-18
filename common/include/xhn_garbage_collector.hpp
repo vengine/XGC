@@ -351,7 +351,7 @@ public:
 template <class T>
 void gc_destructor(T* ptr)
 {
-    //ptr->T::~T();
+    ptr->T::~T();
 };
 
 class garbage_collector : public MemObject
@@ -393,6 +393,10 @@ public:
         {}
         ~mem_handle()
         {
+#ifndef GC_DEBUG
+			if (is_garbage_collect_robot_thread())
+			    return;
+#endif
             if (m_is_transfer) {
                 return;
             }

@@ -72,6 +72,7 @@ namespace xhn
         esint32 orphan_count;
         destructor dest;
 		bool is_garbage;
+		bool is_deleted;
     public:
         mem_btree_node()
         : section(0)
@@ -88,6 +89,7 @@ namespace xhn
         , orphan_count( 100 )
         , dest( NULL )
 		, is_garbage(false)
+		, is_deleted(false)
         {
             memset(children, 0, sizeof(children));
         }
@@ -155,8 +157,6 @@ namespace xhn
             }
         }
 
-		///bool _TrackBack(mem_set& trackBuffer);
-		///bool TrackBack();
 		void Attach(const vptr handle, mem_btree_node* mem);
 		void Detach(const vptr handle, mem_btree_node* mem);
 		void AttchToRoot();
@@ -231,6 +231,9 @@ namespace xhn
 			///if (node->next) { node->next->prev = node->prev; }
             track_buffer[0] = node;
             
+			if (node->is_deleted)
+				return false;
+			node->is_deleted = true;
 			if (node->dest) {
 				node->dest(node->begin_addr);
 			}
