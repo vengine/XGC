@@ -167,7 +167,7 @@ namespace xhn
 		void Detach(const vptr handle, mem_btree_node* mem);
 		void AttchToRoot();
 		void DetachFromRoot();
-		void MakeNotGarbage();
+		void MarkNotGarbage();
     };
     
     class mem_btree

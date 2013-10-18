@@ -38,7 +38,7 @@ void xhn::mem_btree_node::DetachFromRoot() {
 	root_ref_count--;
 	///EAssert(root_ref_count >= 0, "count must greater or equal zero");
 }
-void xhn::mem_btree_node::MakeNotGarbage()
+void xhn::mem_btree_node::MarkNotGarbage()
 {
 	if (!is_garbage)
 		return;
@@ -47,7 +47,7 @@ void xhn::mem_btree_node::MakeNotGarbage()
 	mem_map::iterator end = output_map.end();
 	for (; iter != end; iter++) {
         mem_btree_node* node = iter->second;
-		node->MakeNotGarbage();
+		node->MarkNotGarbage();
 		node->is_garbage = false;
 	}
 }

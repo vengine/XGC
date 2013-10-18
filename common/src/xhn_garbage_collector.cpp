@@ -16,6 +16,9 @@ ImplementRTTI(xhn::mem_attatch_command, RobotCommand);
 ImplementRTTI(xhn::mem_detach_command, RobotCommand);
 ImplementRTTI(xhn::scan_orphan_node_action, Action);
 ImplementRTTI(xhn::scan_mem_node_action, Action);
+ImplementRTTI(xhn::pre_collect_action, Action);
+ImplementRTTI(xhn::mark_not_garbage_action, Action);
+ImplementRTTI(xhn::collect_action, Action);
 ImplementRTTI(xhn::garbage_collect_robot, Robot);
 ImplementRTTI(xhn::sender_robot, Robot);
 
@@ -46,6 +49,21 @@ void xhn::scan_orphan_node_action::DoImpl()
 void xhn::scan_mem_node_action::DoImpl()
 {
 	garbage_collect_robot::get()->scan_detach_nodes();
+}
+
+void xhn::pre_collect_action::DoImpl()
+{
+	garbage_collect_robot::get()->pre_collect();
+}
+
+void xhn::mark_not_garbage_action::DoImpl()
+{
+	garbage_collect_robot::get()->mark_not_garbage();
+}
+
+void xhn::collect_action::DoImpl()
+{
+	garbage_collect_robot::get()->collect();
 }
 
 bool xhn::garbage_collect_robot::CommandProcImpl(xhn::static_string sender, RobotCommand* command)
@@ -141,12 +159,18 @@ xhn::garbage_collector::garbage_collector()
 	RobotManager::Init();
 
     scan_orphan_node_action* sona = ENEW scan_orphan_node_action;
-	scan_mem_node_action* smna = ENEW scan_mem_node_action;
+	///scan_mem_node_action* smna = ENEW scan_mem_node_action;
+	pre_collect_action* pca = ENEW pre_collect_action;
+	mark_not_garbage_action* mnga = ENEW mark_not_garbage_action;
+	collect_action* ca = ENEW collect_action;
 
 	garbage_collect_robot* gc_rob = RobotManager::Get()->AddRobot<garbage_collect_robot>();
 	m_sender = RobotManager::Get()->AddRobot<sender_robot>();
     gc_rob->AddAction(sona);
-	gc_rob->AddAction(smna);
+	///gc_rob->AddAction(smna);
+	gc_rob->AddAction(pca);
+	gc_rob->AddAction(mnga);
+	gc_rob->AddAction(ca);
 
 	RobotManager::Get()->MakeChannel(COMMAND_SENDER, COMMAND_RECEIVER);
 #ifndef GC_DEBUG

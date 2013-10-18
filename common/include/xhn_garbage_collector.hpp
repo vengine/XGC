@@ -85,11 +85,46 @@ public:
 	virtual void DoImpl();
 };
 
+class pre_collect_action : public Action
+{
+    DeclareRTTI;
+public:
+	pre_collect_action()
+	{}
+	virtual void DoImpl();
+};
+
+class mark_not_garbage_action : public Action
+{
+    DeclareRTTI;
+public:
+    mark_not_garbage_action()
+	{}
+	virtual void DoImpl();
+};
+
+class collect_action : public Action
+{
+    DeclareRTTI;
+public:
+    collect_action()
+	{}
+	virtual void DoImpl();
+};
+
 class garbage_collect_robot : public Robot
 {
 	DeclareRTTI;
 public:
 	static garbage_collect_robot* s_garbage_collect_robot;
+public:
+	enum State
+	{
+        NormalState,
+        PreCollectState,
+        MarkNotGarbageState,
+        CollectState,
+	};
 public:
     MemAllocator m_mem_allocator;
 	mem_btree m_btree;
@@ -99,6 +134,7 @@ public:
 	mem_btree_node* root_head;
 	mem_btree_node* root_tail;
     esint32 command_count;
+	State curt_state;
     bool m_isDebugging;
 public:
     garbage_collect_robot()
@@ -108,6 +144,7 @@ public:
 	, root_head(NULL)
 	, root_tail(NULL)
     , command_count(0)
+	, curt_state(NormalState)
 #ifdef PRINT_ATTACH_INFO
 	, m_isDebugging(true)
 #else
@@ -137,6 +174,7 @@ public:
 	}
 	void insert ( const vptr p, euint s, const char* n, destructor d ) {
 		mem_btree_node* node = m_btree.insert((vptr)p, s, n, d);
+		node->is_garbage = false;
         push_orphan_node(node);
 	}
 	void remove ( const vptr p ) {
@@ -448,6 +486,7 @@ public:
 		}
 	}
     void scan_orphan_nodes(esint32 num_cmds) {
+		curt_state = NormalState;
         mem_btree_node* node = orphan;
         while (node) {
             node->orphan_count -= num_cmds;
@@ -460,6 +499,47 @@ public:
                 node = node->next;
         }
     }
+	void pre_collect() {
+		curt_state = PreCollectState;
+		mem_btree_node* node = tail;
+		while (node) {
+			node->is_garbage = true;
+			node = node->prev;
+		}
+	}
+	void mark_not_garbage() {
+		curt_state = MarkNotGarbageState;
+		mem_btree_node* node = root_tail;
+		while (node) {
+			if (node->root_ref_count) {
+				node->MarkNotGarbage();
+			}
+			node = node->root_prev;
+		}
+	}
+	void collect() {
+		curt_state = CollectState;
+		mem_btree_node* node = tail;
+		while (node) {
+			if (node->is_garbage) {
+				vptr ptr = node->begin_addr;
+				if (node == head) { head = node->next; }
+				if (node == tail) { tail = node->prev; }
+				if (node->prev)   { node->prev->next = node->next; }
+				if (node->next)   { node->next->prev = node->prev; }
+
+				if (node == root_head) { root_head = node->root_next; }
+				if (node == root_tail) { root_tail = node->root_prev; }
+				if (node->root_prev)   { node->root_prev->root_next = node->root_next; }
+				if (node->root_next)   { node->root_next->root_prev = node->root_prev; }
+				node = node->prev;
+				remove(ptr);
+			}
+			else {
+				node = node->prev;
+			}
+		}
+	}
 	void scan_detach_nodes() {
 		
 		mem_btree_node* node = tail;
@@ -470,7 +550,7 @@ public:
 		node = root_tail;
 		while (node) {
 			if (node->root_ref_count) {
-                node->MakeNotGarbage();
+                node->MarkNotGarbage();
 			}
 			node = node->root_prev;
 		}
