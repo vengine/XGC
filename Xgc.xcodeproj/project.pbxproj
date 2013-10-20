@@ -104,7 +104,6 @@
 		681EE51017F9A4A000952372 /* xhn_list.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = xhn_list.hpp; path = common/include/xhn_list.hpp; sourceTree = "<group>"; };
 		681EE51117F9A4A000952372 /* xhn_lock.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = xhn_lock.hpp; path = common/include/xhn_lock.hpp; sourceTree = "<group>"; };
 		681EE51217F9A4A000952372 /* xhn_map.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = xhn_map.hpp; path = common/include/xhn_map.hpp; sourceTree = "<group>"; };
-		681EE51317F9A4A000952372 /* xhn_mem_handle.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = xhn_mem_handle.hpp; path = common/include/xhn_mem_handle.hpp; sourceTree = "<group>"; };
 		681EE51417F9A4A000952372 /* xhn_mem_map.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = xhn_mem_map.hpp; path = common/include/xhn_mem_map.hpp; sourceTree = "<group>"; };
 		681EE51517F9A4A000952372 /* xhn_pair.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = xhn_pair.hpp; path = common/include/xhn_pair.hpp; sourceTree = "<group>"; };
 		681EE51617F9A4A000952372 /* xhn_rbtree.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = xhn_rbtree.hpp; path = common/include/xhn_rbtree.hpp; sourceTree = "<group>"; };
@@ -174,7 +173,6 @@
 				681EE51017F9A4A000952372 /* xhn_list.hpp */,
 				681EE51117F9A4A000952372 /* xhn_lock.hpp */,
 				681EE51217F9A4A000952372 /* xhn_map.hpp */,
-				681EE51317F9A4A000952372 /* xhn_mem_handle.hpp */,
 				681EE51417F9A4A000952372 /* xhn_mem_map.hpp */,
 				681EE51517F9A4A000952372 /* xhn_pair.hpp */,
 				681EE51617F9A4A000952372 /* xhn_rbtree.hpp */,

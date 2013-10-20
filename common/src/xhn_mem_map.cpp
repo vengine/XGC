@@ -15,18 +15,14 @@
 void xhn::mem_btree_node::Attach(const vptr handle, mem_btree_node* mem)
 {
 	output_map.insert(xhn::make_pair(handle, mem));
-#ifdef GC_DEBUG
 	input_pair ip = {this, (vptr)handle};
 	mem->input_set.insert(ip);
-#endif
 }
 void xhn::mem_btree_node::Detach(const vptr handle, mem_btree_node* mem)
 {
 	output_map.erase(handle);
-#ifdef GC_DEBUG
 	input_pair ip = {this, (vptr)handle};
 	mem->input_set.erase(ip);
-#endif
 	garbage_collect_robot::get()->push_detach_node(mem);
 }
 void xhn::mem_btree_node::AttchToRoot() {
@@ -38,6 +34,56 @@ void xhn::mem_btree_node::DetachFromRoot() {
 	root_ref_count--;
 	///EAssert(root_ref_count >= 0, "count must greater or equal zero");
 }
+bool xhn::mem_btree_node::_TrackBack(mem_set& trackBuffer)
+{
+    if (root_ref_count)
+        return true;
+    
+    {
+        input_mem_set::iterator iter = input_set.begin();
+        input_mem_set::iterator end = input_set.end();
+        for (; iter != end; iter++)
+        {
+            input_pair& ip = *iter;
+            mem_btree_node* i = ip.node;
+            if (this == i) {
+                continue;
+            }
+            if (trackBuffer.find(i) != trackBuffer.end()) {
+                continue;
+            }
+            trackBuffer.insert(i);
+            if (i->_TrackBack(trackBuffer)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void xhn::mem_btree_node::_Erase()
+{
+    mem_map::iterator iter = output_map.begin();
+    mem_map::iterator end = output_map.end();
+    for (; iter != end; iter++) {
+        vptr handle = iter->first;
+        mem_btree_node* i = iter->second;
+        input_pair ip = {this, handle};
+        if (this == i)
+            continue;
+        i->input_set.erase(ip);
+        ///i->TrackBack();
+        ///garbage_collect_robot::get()->push_detach_node(i);
+    }
+    output_map.clear();
+}
+
+bool xhn::mem_btree_node::TrackBack()
+{
+    mem_set trackBuffer;
+    return _TrackBack(trackBuffer);
+}
+
 void xhn::mem_btree_node::MarkNotGarbage()
 {
 	if (!is_garbage)

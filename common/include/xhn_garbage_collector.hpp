@@ -111,6 +111,15 @@ public:
 	{}
 	virtual void DoImpl();
 };
+    
+class track_action : public Action
+{
+    DeclareRTTI;
+public:
+    track_action()
+    {}
+    virtual void DoImpl();
+};
 
 class garbage_collect_robot : public Robot
 {
@@ -124,6 +133,7 @@ public:
         PreCollectState,
         MarkNotGarbageState,
         CollectState,
+        TrackState,
 	};
 public:
     MemAllocator m_mem_allocator;
@@ -135,6 +145,7 @@ public:
 	mem_btree_node* root_tail;
     esint32 command_count;
 	State curt_state;
+    euint64 track_count;
     bool m_isDebugging;
 public:
     garbage_collect_robot()
@@ -145,6 +156,7 @@ public:
 	, root_tail(NULL)
     , command_count(0)
 	, curt_state(NormalState)
+    , track_count(0)
 #ifdef PRINT_ATTACH_INFO
 	, m_isDebugging(true)
 #else
@@ -499,7 +511,22 @@ public:
                 node = node->next;
         }
     }
+    void erase(mem_btree_node* node) {
+        node->_Erase();
+        
+        if (node == head) { head = node->next; }
+        if (node == tail) { tail = node->prev; }
+        if (node->prev)   { node->prev->next = node->next; }
+        if (node->next)   { node->next->prev = node->prev; }
+        
+        if (node == root_head) { root_head = node->root_next; }
+        if (node == root_tail) { root_tail = node->root_prev; }
+        if (node->root_prev)   { node->root_prev->root_next = node->root_next; }
+        if (node->root_next)   { node->root_next->root_prev = node->root_prev; }
+    }
 	void pre_collect() {
+        if (track_count % 10000)
+            return;
 		curt_state = PreCollectState;
 		mem_btree_node* node = tail;
 		while (node) {
@@ -508,6 +535,8 @@ public:
 		}
 	}
 	void mark_not_garbage() {
+        if (track_count % 10000)
+            return;
 		curt_state = MarkNotGarbageState;
 		mem_btree_node* node = root_tail;
 		while (node) {
@@ -518,20 +547,14 @@ public:
 		}
 	}
 	void collect() {
+        if (track_count % 10000)
+            return;
 		curt_state = CollectState;
 		mem_btree_node* node = tail;
 		while (node) {
 			if (node->is_garbage) {
-				vptr ptr = node->begin_addr;
-				if (node == head) { head = node->next; }
-				if (node == tail) { tail = node->prev; }
-				if (node->prev)   { node->prev->next = node->next; }
-				if (node->next)   { node->next->prev = node->prev; }
-
-				if (node == root_head) { root_head = node->root_next; }
-				if (node == root_tail) { root_tail = node->root_prev; }
-				if (node->root_prev)   { node->root_prev->root_next = node->root_next; }
-				if (node->root_next)   { node->root_next->root_prev = node->root_prev; }
+                vptr ptr = node->begin_addr;
+				erase(node);
 				node = node->prev;
 				remove(ptr);
 			}
@@ -540,6 +563,26 @@ public:
 			}
 		}
 	}
+    void track() {
+        curt_state = TrackState;
+        int count = 0;
+        mem_btree_node* node = tail;
+		while (node) {
+			if (!node->TrackBack()) {
+                vptr ptr = node->begin_addr;
+				erase(node);
+				node = node->prev;
+				remove(ptr);
+			}
+			else {
+				node = node->prev;
+			}
+            count++;
+            if (count > 100)
+                break;
+		}
+        track_count++;
+    }
 	void scan_detach_nodes() {
 		
 		mem_btree_node* node = tail;
@@ -557,6 +600,7 @@ public:
 		node = tail;
 		while (node) {
 			if (node->is_garbage) {
+                node->_Erase();
 				vptr ptr = node->begin_addr;
 				if (node == head) { head = node->next; }
 				if (node == tail) { tail = node->prev; }

@@ -36,7 +36,6 @@ namespace xhn
     class mem_btree_node : public MemObject
     {
 	public:
-#ifdef GC_DEBUG
 		struct input_pair
 		{
 			mem_btree_node* node;
@@ -55,7 +54,6 @@ namespace xhn
 			}
 		};
 		typedef set<input_pair> input_mem_set;
-#endif
         typedef map<vptr, mem_btree_node*> mem_map;
 		typedef set<mem_btree_node*> mem_set;
     public:
@@ -65,9 +63,7 @@ namespace xhn
         euint32 num_children;
         vptr begin_addr;
         vptr end_addr;
-#ifdef GC_DEBUG
 		input_mem_set input_set;
-#endif
 		mem_map output_map;
 		esint32 root_ref_count;
 		mem_btree_node* prev;
@@ -168,6 +164,9 @@ namespace xhn
 		void AttchToRoot();
 		void DetachFromRoot();
 		void MarkNotGarbage();
+        bool _TrackBack(mem_set& trackBuffer);
+        void _Erase();
+        bool TrackBack();
     };
     
     class mem_btree

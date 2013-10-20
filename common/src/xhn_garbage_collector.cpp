@@ -19,6 +19,7 @@ ImplementRTTI(xhn::scan_mem_node_action, Action);
 ImplementRTTI(xhn::pre_collect_action, Action);
 ImplementRTTI(xhn::mark_not_garbage_action, Action);
 ImplementRTTI(xhn::collect_action, Action);
+ImplementRTTI(xhn::track_action, Action);
 ImplementRTTI(xhn::garbage_collect_robot, Robot);
 ImplementRTTI(xhn::sender_robot, Robot);
 
@@ -64,6 +65,11 @@ void xhn::mark_not_garbage_action::DoImpl()
 void xhn::collect_action::DoImpl()
 {
 	garbage_collect_robot::get()->collect();
+}
+
+void xhn::track_action::DoImpl()
+{
+    garbage_collect_robot::get()->track();
 }
 
 bool xhn::garbage_collect_robot::CommandProcImpl(xhn::static_string sender, RobotCommand* command)
@@ -138,9 +144,9 @@ float xhn::sender_robot::get_blockrate()
 void xhn::garbage_collect_robot::DoAction()
 {
 	ActionPtr act = GetCurrnetAction();
-	for (int i = 0; i < 10; i++) CommandProc();
+	for (int i = 0; i < 5; i++) CommandProc();
 	if (act.get()) act->Do();
-	for (int i = 0; i < 10; i++) CommandProc();
+	for (int i = 0; i < 5; i++) CommandProc();
 	Next();
 }
 
@@ -163,6 +169,7 @@ xhn::garbage_collector::garbage_collector()
 	pre_collect_action* pca = ENEW pre_collect_action;
 	mark_not_garbage_action* mnga = ENEW mark_not_garbage_action;
 	collect_action* ca = ENEW collect_action;
+    track_action* ta = ENEW track_action;
 
 	garbage_collect_robot* gc_rob = RobotManager::Get()->AddRobot<garbage_collect_robot>();
 	m_sender = RobotManager::Get()->AddRobot<sender_robot>();
@@ -171,6 +178,7 @@ xhn::garbage_collector::garbage_collector()
 	gc_rob->AddAction(pca);
 	gc_rob->AddAction(mnga);
 	gc_rob->AddAction(ca);
+    gc_rob->AddAction(ta);
 
 	RobotManager::Get()->MakeChannel(COMMAND_SENDER, COMMAND_RECEIVER);
 #ifndef GC_DEBUG
