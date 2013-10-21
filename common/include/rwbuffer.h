@@ -31,14 +31,9 @@ public:
     ~SafedBuffer();
     template <typename T>
     void Write(const T& from) {
-		euint tmp[ (sizeof(T) % sizeof(euint)) ? 
-			        sizeof(T) / sizeof(euint) * sizeof(euint) + sizeof(euint) :
-		            sizeof(T) / sizeof(euint) ];
-		memset(tmp, 0, sizeof(tmp));
-		memcpy(tmp, (vptr)&from, sizeof(T));
-		while (!RWBuffer_Write(m_buffer, tmp, sizeof(T))) {
-            m_blockingCount++;
-        }
+		while (!RWBuffer_Write(m_buffer, (const euint*)&from, sizeof(T))) {
+			m_blockingCount++;
+		}
         m_nonblockingCount++;
     }
 	void Write(const void* buf, euint size);

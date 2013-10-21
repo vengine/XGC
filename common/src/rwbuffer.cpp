@@ -73,8 +73,6 @@ bool RWBuffer_Read(RWBuffer _self, euint* result, euint* read_size)
         buffer_chunk_pointer = (euint*)_self->top_barrier;
 
     number_uints = *read_size / sizeof(euint);
-	if (*read_size % sizeof(euint))
-		number_uints++;
 
     next = (euint*)*buffer_chunk_pointer;
     buffer_chunk_pointer++;
@@ -91,6 +89,15 @@ bool RWBuffer_Read(RWBuffer _self, euint* result, euint* read_size)
         buffer_chunk_pointer++;
     }
 
+	if (*read_size % sizeof(euint))
+	{
+		if (buffer_chunk_pointer > _self->bottom_barrier)
+			buffer_chunk_pointer = (euint*)_self->top_barrier;
+
+		memcpy(&result[number_uints], buffer_chunk_pointer, *read_size % sizeof(euint));
+		buffer_chunk_pointer++;
+	}
+
     _self->top_pointer = next;
     return true;
 }
@@ -99,8 +106,7 @@ bool RWBuffer_Write(RWBuffer _self, const euint* from, const euint write_size)
 {
     register euint* registered_top_pointer = (euint*)_self->top_pointer;
     register euint* registered_bottom_pointer = (euint*)_self->bottom_pointer;
-    euint real_write_size = GetRealSize(euint, write_size);
-    euint number_uints = real_write_size / sizeof(euint);
+	euint number_uints = write_size / sizeof(euint);
     euint* buffer_chunk_pointer = registered_bottom_pointer + 2;
     euint i = 0;
 
@@ -118,6 +124,28 @@ bool RWBuffer_Write(RWBuffer _self, const euint* from, const euint write_size)
         *buffer_chunk_pointer = from[i];
         buffer_chunk_pointer++;
     }
+
+	if (write_size % sizeof(euint))
+	{
+		if (buffer_chunk_pointer > _self->bottom_barrier)
+			buffer_chunk_pointer = (euint*)_self->top_barrier;
+
+		if (buffer_chunk_pointer == registered_top_pointer)
+			return false;
+
+		memcpy(buffer_chunk_pointer, &from[number_uints], write_size % sizeof(euint));
+		buffer_chunk_pointer++;
+	}
+	else
+	{
+		if (buffer_chunk_pointer > _self->bottom_barrier)
+			buffer_chunk_pointer = (euint*)_self->top_barrier;
+
+		if (buffer_chunk_pointer == registered_top_pointer)
+			return false;
+
+		buffer_chunk_pointer++;
+	}
 
     if (buffer_chunk_pointer > _self->bottom_barrier)
         buffer_chunk_pointer = (euint*)_self->top_barrier;
