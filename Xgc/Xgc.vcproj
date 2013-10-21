@@ -318,6 +318,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\common\include\xhn_fixed_queue.hpp"
+					>
+				</File>
+				<File
 					RelativePath="..\common\include\xhn_garbage_collector.hpp"
 					>
 				</File>

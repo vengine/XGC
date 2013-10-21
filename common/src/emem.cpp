@@ -203,7 +203,7 @@ void dealloc(mem_pool_node* _node, void* _ptr)
 {
     mem_node* n = NULL;
     EAssert(is_from(_node, _ptr), "invalid memory node!");
-	meminit(_ptr, _node->real_chk_size);
+	///meminit(_ptr, _node->real_chk_size);
     n = (mem_node*)_ptr;
     if (_node->head)
     {

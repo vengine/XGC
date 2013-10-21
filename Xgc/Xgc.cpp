@@ -3,6 +3,7 @@
 
 #include "xhn_garbage_collector.hpp"
 #include "rwbuffer.h"
+#include "xhn_fixed_queue.hpp"
 class ListNode;
 typedef xhn::garbage_collector::mem_handle<ListNode> ListNodeHandle;
 class ListNode
@@ -195,6 +196,22 @@ void test2()
 
 int main(void)
 {
+	/**
+	xhn::fixed_queue<int> queueTest(32);
+    queueTest.push(10);
+	queueTest.push(20);
+	xhn::fixed_queue<int>::iterator iter = queueTest.begin();
+	xhn::fixed_queue<int>::iterator end = queueTest.end();
+	for (; iter != end; iter++) {
+        int i = *iter;
+		printf("i %d\n", i);
+	}
+	int tmp = 0;
+	queueTest.pop(tmp);
+	printf("tmp %d\n", tmp);
+	queueTest.pop(tmp);
+	printf("tmp %d\n", tmp);
+	**/
 	test1();
 	return 0;
 }
