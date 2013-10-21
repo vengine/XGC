@@ -3,6 +3,7 @@
 
 #include "xhn_garbage_collector.hpp"
 #include "rwbuffer.h"
+#include "timer.h"
 #include "xhn_fixed_queue.hpp"
 class ListNode;
 typedef xhn::garbage_collector::mem_handle<ListNode> ListNodeHandle;
@@ -74,6 +75,7 @@ void test0()
 	IntHandle intHandle;
 	intHandle = GC_ALLOC(int);
 	*intHandle = 0;
+	TimeCheckpoint tc = TimeCheckpoint::Tick();
 	while(1) {
 		TestObjectHandle testHandle0;
 		TestObjectHandle testHandle1;
@@ -119,7 +121,10 @@ void test0()
 
 		if ((*intHandle % 10000) == 0) {
 			float blockrate = xhn::garbage_collector::get()->get_blockrate();
-			printf("blockrate %f\n", blockrate);
+			TimeCheckpoint curtTc = TimeCheckpoint::Tick();
+			double t = TimeCheckpoint::CaleElapsedTime(tc, curtTc);
+			printf("blockrate %f time %f, %f ops per second\n", blockrate, (float)t, 150000.0f / (float)(t / 1000.0 / 1000.0));
+			tc = TimeCheckpoint::Tick();
 		}
 	}
 }
@@ -129,6 +134,7 @@ void test1()
 	IntHandle intHandle;
 	intHandle = GC_ALLOC(int);
 	*intHandle = 0;
+	TimeCheckpoint tc = TimeCheckpoint::Tick();
 	while (1)
 	{
 		TestObjectHandle handle;
@@ -154,7 +160,10 @@ void test1()
 
 		if ((*intHandle % 10000) == 0) {
 			float blockrate = xhn::garbage_collector::get()->get_blockrate();
-			printf("blockrate %f\n", blockrate);
+			TimeCheckpoint curtTc = TimeCheckpoint::Tick();
+			double t = TimeCheckpoint::CaleElapsedTime(tc, curtTc);
+			printf("blockrate %f time %f, %f ops per second\n", blockrate, (float)t, 100000.0f / (float)(t / 1000.0 / 1000.0));
+			tc = TimeCheckpoint::Tick();
 		}
 	}
 }
@@ -194,24 +203,29 @@ void test2()
 	}
 }
 
+void test3()
+{
+	int ttt = 0;
+	TimeCheckpoint tc = TimeCheckpoint::Tick();
+	while (1)
+	{
+		for (int i = 0; i < 150; i++) {
+		    TestObject* aaa = new TestObject;
+			delete aaa;
+	    }
+		ttt++;
+
+		if ((ttt % 10000) == 0) {
+			TimeCheckpoint curtTc = TimeCheckpoint::Tick();
+			double t = TimeCheckpoint::CaleElapsedTime(tc, curtTc);
+			printf("%f, %f ops per second\n", (float)t, 1500000.0f / (float)(t / 1000.0 / 1000.0));
+			tc = TimeCheckpoint::Tick();
+		}
+	}
+}
+
 int main(void)
 {
-	/**
-	xhn::fixed_queue<int> queueTest(32);
-    queueTest.push(10);
-	queueTest.push(20);
-	xhn::fixed_queue<int>::iterator iter = queueTest.begin();
-	xhn::fixed_queue<int>::iterator end = queueTest.end();
-	for (; iter != end; iter++) {
-        int i = *iter;
-		printf("i %d\n", i);
-	}
-	int tmp = 0;
-	queueTest.pop(tmp);
-	printf("tmp %d\n", tmp);
-	queueTest.pop(tmp);
-	printf("tmp %d\n", tmp);
-	**/
-	test1();
+	test0();
 	return 0;
 }
