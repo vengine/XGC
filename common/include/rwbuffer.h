@@ -13,42 +13,13 @@
 #include "common.h"
 #include "etypes.h"
 #include "emem.hpp"
+#define GetRealSize(type, size) size + ( sizeof(type) - (size % sizeof(type)) )
+
 API_EXPORT RWBuffer RWBuffer_new(euint buffer_size);
 API_EXPORT void RWBuffer_delete(RWBuffer _self);
 API_EXPORT bool RWBuffer_Read(RWBuffer _self, euint* result, euint* read_size);
 API_EXPORT bool RWBuffer_Write(RWBuffer _self, const euint* from, const euint write_size);
 API_EXPORT bool RWBuffer_IsEmpty(RWBuffer _self);
-
-class SafedBuffer : public MemObject
-{
-public:
-    char* m_transferBuffer;
-    RWBuffer m_buffer;
-    euint64 m_nonblockingCount;
-	euint64 m_blockingCount;
-public:
-    SafedBuffer(euint bufferSize);
-    ~SafedBuffer();
-    template <typename T>
-    void Write(const T& from) {
-		while (!RWBuffer_Write(m_buffer, (const euint*)&from, sizeof(T))) {
-			m_blockingCount++;
-		}
-        m_nonblockingCount++;
-    }
-	void Write(const void* buf, euint size);
-    char* Read(euint* readSize);
-	inline bool IsEmpty() {
-		return RWBuffer_IsEmpty(m_buffer);
-	}
-    inline float GetBlockrate()
-    {
-        float ret = (float)((double)m_blockingCount / (double)(m_blockingCount + m_nonblockingCount));
-        m_blockingCount = 0;
-        m_nonblockingCount = 0;
-        return ret;
-    }
-};
 #endif
 
 /**

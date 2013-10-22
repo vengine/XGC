@@ -33,6 +33,38 @@
 ///**********************************************************************///
 ///                       class define begin                             ///
 ///**********************************************************************///
+
+class SafedBuffer : public MemObject
+{
+public:
+	char* m_transferBuffer;
+	RWBuffer m_buffer;
+	euint64 m_nonblockingCount;
+	euint64 m_blockingCount;
+public:
+	SafedBuffer(euint bufferSize);
+	~SafedBuffer();
+	template <typename T>
+	void Write(const T& from) {
+		while (!RWBuffer_Write(m_buffer, (const euint*)&from, sizeof(T))) {
+			m_blockingCount++;
+		}
+		m_nonblockingCount++;
+	}
+	void Write(const void* buf, euint size);
+	char* Read(euint* readSize);
+	inline bool IsEmpty() {
+		return RWBuffer_IsEmpty(m_buffer);
+	}
+	inline float GetBlockrate()
+	{
+		float ret = (float)((double)m_blockingCount / (double)(m_blockingCount + m_nonblockingCount));
+		m_blockingCount = 0;
+		m_nonblockingCount = 0;
+		return ret;
+	}
+};
+
 class Robot;
 class Action : public RefObject
 {

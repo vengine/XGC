@@ -15,6 +15,40 @@ ImplementRootRTTI(RobotCommandBase);
 ImplementRTTI(RobotCommand, RobotCommandBase);
 ImplementRTTI(RobotCommandReceipt, RobotCommandBase);
 ImplementRootRTTI(Robot);
+
+///**********************************************************************///
+///                       class implement begin                          ///
+///**********************************************************************///
+SafedBuffer::SafedBuffer(euint bufferSize)
+: m_nonblockingCount(0)
+, m_blockingCount(0)
+{
+	euint size = GetRealSize(euint, bufferSize);
+	m_transferBuffer = (char*)Malloc(size);
+	m_buffer = RWBuffer_new(bufferSize);
+}
+SafedBuffer::~SafedBuffer()
+{
+	Mfree(m_transferBuffer);
+	RWBuffer_delete(m_buffer);
+}
+void SafedBuffer::Write(const void* buf, euint size)
+{
+	while (!RWBuffer_Write(m_buffer, (const euint*)buf, size)) {
+		m_blockingCount++;
+	}
+	m_nonblockingCount++;
+}
+char* SafedBuffer::Read(euint* readSize)
+{
+	if (RWBuffer_Read(m_buffer, (euint*)m_transferBuffer, readSize))
+		return m_transferBuffer;
+	else
+		return NULL;
+}
+///**********************************************************************///
+///                       class implement end                            ///
+///**********************************************************************///
 ///**********************************************************************///
 ///                       class implement begin                          ///
 ///**********************************************************************///

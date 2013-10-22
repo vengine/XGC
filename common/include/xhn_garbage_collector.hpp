@@ -77,33 +77,6 @@ public:
     virtual void DoImpl();
 };
 
-class scan_mem_node_action : public Action
-{
-	DeclareRTTI;
-public:
-    scan_mem_node_action()
-    {}
-	virtual void DoImpl();
-};
-
-class pre_collect_action : public Action
-{
-    DeclareRTTI;
-public:
-	pre_collect_action()
-	{}
-	virtual void DoImpl();
-};
-
-class mark_not_garbage_action : public Action
-{
-    DeclareRTTI;
-public:
-    mark_not_garbage_action()
-	{}
-	virtual void DoImpl();
-};
-
 class collect_action : public Action
 {
     DeclareRTTI;
@@ -143,7 +116,6 @@ public:
         mem_btree_node* mem_node;
 	};
 public:
-    MemAllocator m_mem_allocator;
 	mem_btree m_btree;
 	xhn::fixed_queue<mem_info> m_mem_info_queue;
     mem_btree_node* orphan;
@@ -152,8 +124,9 @@ public:
 	mem_btree_node* root_head;
 	mem_btree_node* root_tail;
     esint32 command_count;
+	euint prev_alloced_mems;
 	State curt_state;
-    euint64 track_count;
+	bool all_collect;
     bool m_isDebugging;
 public:
     garbage_collect_robot()
@@ -164,8 +137,9 @@ public:
 	, root_head(NULL)
 	, root_tail(NULL)
     , command_count(0)
+	, prev_alloced_mems(0)
 	, curt_state(NormalState)
-    , track_count(0)
+	, all_collect(false)
 #ifdef PRINT_ATTACH_INFO
 	, m_isDebugging(true)
 #else
@@ -173,11 +147,9 @@ public:
 #endif
 	{
 		s_garbage_collect_robot = this;
-        m_mem_allocator = MemAllocator_new();
 	}
 	~garbage_collect_robot() 
 	{
-        MemAllocator_delete(m_mem_allocator);
 	}
 	static garbage_collect_robot* get() {
 		return s_garbage_collect_robot;
@@ -198,11 +170,7 @@ public:
 	void mark_not_garbage();
 	void collect();
 	void track();
-	void scan_detach_nodes();
 
-	euint get_alloced_mem_size() {
-		return MemAllocator_get_alloced_mem_size(m_mem_allocator);
-	}
 	virtual bool CommandProcImpl(xhn::static_string sender, RobotCommand* command);
 	virtual bool CommandReceiptProcImpl(xhn::static_string sender, RobotCommandReceipt* receipt) { return true; }
 	virtual void DoAction();

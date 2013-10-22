@@ -233,33 +233,6 @@ struct TTT
 
 int main(void)
 {
-	RWBuffer buffer = RWBuffer_new(48);
-	TTT t0;
-	TTT t1;
-	TTT t2;
-	TTT t3;
-	memcpy(t0.mbuf0, "abcef", 6);
-    memcpy(t0.mbuf1, "xyz", 4);
-	memcpy(t1.mbuf0, "ggvxx", 6);
-	memcpy(t1.mbuf1, "bbx", 4);
-	int a = 32;
-	euint size;
-	RWBuffer_Write(buffer, (const euint*)&t0, sizeof(t0));
-	RWBuffer_Write(buffer, (const euint*)&t1, sizeof(t1));
-	RWBuffer_Read(buffer, (euint*)&t2, &size);
-	RWBuffer_Read(buffer, (euint*)&t3, &size);
-	RWBuffer_Write(buffer, (const euint*)&t0, sizeof(t0));
-	RWBuffer_Write(buffer, (const euint*)&t1, sizeof(t1));
-	RWBuffer_Read(buffer, (euint*)&t2, &size);
-	RWBuffer_Read(buffer, (euint*)&t3, &size);
-	RWBuffer_Write(buffer, (const euint*)&t0, sizeof(t0));
-	RWBuffer_Write(buffer, (const euint*)&t1, sizeof(t1));
-	RWBuffer_Read(buffer, (euint*)&t2, &size);
-	RWBuffer_Read(buffer, (euint*)&t3, &size);
-	RWBuffer_Write(buffer, (const euint*)&t0, sizeof(t0));
-	RWBuffer_Write(buffer, (const euint*)&t1, sizeof(t1));
-	RWBuffer_Read(buffer, (euint*)&t2, &size);
-	RWBuffer_Read(buffer, (euint*)&t3, &size);
 	test0();
 	return 0;
 }

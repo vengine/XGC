@@ -230,6 +230,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\common\include\emem_pool.h"
+					>
+				</File>
+				<File
 					RelativePath="..\common\include\esignal.h"
 					>
 				</File>
@@ -487,27 +491,6 @@
 				</File>
 				<File
 					RelativePath="..\common\src\exception.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="2"
-							PrecompiledHeaderThrough="pch.h"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PrecompiledHeaderThrough="pch.h"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\common\src\golden_cudgel.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"

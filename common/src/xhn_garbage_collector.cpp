@@ -15,9 +15,6 @@ ImplementRTTI(xhn::mem_create_command, RobotCommand);
 ImplementRTTI(xhn::mem_attatch_command, RobotCommand);
 ImplementRTTI(xhn::mem_detach_command, RobotCommand);
 ImplementRTTI(xhn::scan_orphan_node_action, Action);
-ImplementRTTI(xhn::scan_mem_node_action, Action);
-ImplementRTTI(xhn::pre_collect_action, Action);
-ImplementRTTI(xhn::mark_not_garbage_action, Action);
 ImplementRTTI(xhn::collect_action, Action);
 ImplementRTTI(xhn::track_action, Action);
 ImplementRTTI(xhn::garbage_collect_robot, Robot);
@@ -47,23 +44,10 @@ void xhn::scan_orphan_node_action::DoImpl()
     garbage_collect_robot::get()->command_count = 0;
 }
 
-void xhn::scan_mem_node_action::DoImpl()
-{
-	garbage_collect_robot::get()->scan_detach_nodes();
-}
-
-void xhn::pre_collect_action::DoImpl()
-{
-	garbage_collect_robot::get()->pre_collect();
-}
-
-void xhn::mark_not_garbage_action::DoImpl()
-{
-	garbage_collect_robot::get()->mark_not_garbage();
-}
-
 void xhn::collect_action::DoImpl()
 {
+	garbage_collect_robot::get()->pre_collect();
+	garbage_collect_robot::get()->mark_not_garbage();
 	garbage_collect_robot::get()->collect();
 }
 
@@ -207,7 +191,7 @@ void xhn::garbage_collect_robot::remove ( const vptr p ) {
 		printf("free %llx\n", (ref_ptr)p);
 #endif
 #endif
-		return Mfree(p);
+		Mfree(p);
 	}
 }
 void xhn::garbage_collect_robot::attach ( const vptr section, vptr mem ) {
@@ -546,8 +530,8 @@ void xhn::garbage_collect_robot::erase(mem_btree_node* node) {
 	if (node->root_next)   { node->root_next->root_prev = node->root_prev; }
 }
 void xhn::garbage_collect_robot::pre_collect() {
-	if (track_count % 10000)
-		return;
+	if (!all_collect)
+	    return;
 	curt_state = PreCollectState;
 	mem_btree_node* node = tail;
 	while (node) {
@@ -556,7 +540,7 @@ void xhn::garbage_collect_robot::pre_collect() {
 	}
 }
 void xhn::garbage_collect_robot::mark_not_garbage() {
-	if (track_count % 10000)
+	if (!all_collect)
 		return;
 	curt_state = MarkNotGarbageState;
 	mem_btree_node* node = root_tail;
@@ -568,7 +552,7 @@ void xhn::garbage_collect_robot::mark_not_garbage() {
 	}
 }
 void xhn::garbage_collect_robot::collect() {
-	if (track_count % 10000)
+	if (!all_collect)
 		return;
 	curt_state = CollectState;
 	mem_btree_node* node = tail;
@@ -585,8 +569,22 @@ void xhn::garbage_collect_robot::collect() {
 	}
 }
 void xhn::garbage_collect_robot::track() {
+	if (all_collect) {
+		all_collect = false;
+		return;
+	}
+	if (m_btree.get_alloced_size() > 128 * 1024 * 1024) {
+		all_collect = true;
+		return;
+	}
 	curt_state = TrackState;
-	int count = 0;
+
+	euint delta_mem = 0;
+	if (m_btree.count > prev_alloced_mems)
+		delta_mem = m_btree.count - prev_alloced_mems;
+	int count = delta_mem * 5;
+	prev_alloced_mems = m_btree.count;
+
 	mem_btree_node* node = tail;
 	while (node) {
 		if (!node->TrackBack()) {
@@ -598,46 +596,9 @@ void xhn::garbage_collect_robot::track() {
 		else {
 			node = node->prev;
 		}
-		count++;
-		if (count > 100)
+		count--;
+		if (count <= 0)
 			break;
-	}
-	track_count++;
-}
-void xhn::garbage_collect_robot::scan_detach_nodes() {
-
-	mem_btree_node* node = tail;
-	while (node) {
-		node->is_garbage = true;
-		node = node->prev;
-	}
-	node = root_tail;
-	while (node) {
-		if (node->root_ref_count) {
-			node->MarkNotGarbage();
-		}
-		node = node->root_prev;
-	}
-	node = tail;
-	while (node) {
-		if (node->is_garbage) {
-			node->_Erase();
-			vptr ptr = node->begin_addr;
-			if (node == head) { head = node->next; }
-			if (node == tail) { tail = node->prev; }
-			if (node->prev)   { node->prev->next = node->next; }
-			if (node->next)   { node->next->prev = node->prev; }
-
-			if (node == root_head) { root_head = node->root_next; }
-			if (node == root_tail) { root_tail = node->root_prev; }
-			if (node->root_prev)   { node->root_prev->root_next = node->root_next; }
-			if (node->root_next)   { node->root_next->root_prev = node->root_prev; }
-			node = node->prev;
-			remove(ptr);
-		}
-		else {
-			node = node->prev;
-		}
 	}
 }
 
@@ -657,8 +618,6 @@ xhn::garbage_collector::garbage_collector()
 
     scan_orphan_node_action* sona = ENEW scan_orphan_node_action;
 	///scan_mem_node_action* smna = ENEW scan_mem_node_action;
-	pre_collect_action* pca = ENEW pre_collect_action;
-	mark_not_garbage_action* mnga = ENEW mark_not_garbage_action;
 	collect_action* ca = ENEW collect_action;
     track_action* ta = ENEW track_action;
 
@@ -666,8 +625,6 @@ xhn::garbage_collector::garbage_collector()
 	m_sender = RobotManager::Get()->AddRobot<sender_robot>();
     gc_rob->AddAction(sona);
 	///gc_rob->AddAction(smna);
-	gc_rob->AddAction(pca);
-	gc_rob->AddAction(mnga);
 	gc_rob->AddAction(ca);
     gc_rob->AddAction(ta);
 

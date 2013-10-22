@@ -262,387 +262,53 @@ bool MemPoolNode_empty(MemPoolNode _self)
     return SELF.head == NULL;
 }
 
-typedef struct _mem_pool
-{
-    euint real_chk_size;
-    euint num_chunk_per_mem_block;
-    List mem_pool_chain;
-    struct _mem_pool* next;
-	ELock elock;
-} mem_pool;
-
-typedef struct _mem_pool_list
-{
-    mem_pool* head;
-    mem_pool* tail;
-    ELock elock;
-} mem_pool_list;
-
-#define PAGE_SIZE (512)
-MemPool MemPool_new(euint _chk_size)
-{
-    MemPool ret;
-	euint num_chunk_per_mem_block = 0;
-	euint c = 1;
-	MemPoolNode node = {NULL};
-	var v;
-
-    ret.self = (struct _mem_pool*)malloc(sizeof(mem_pool));
-    ret.self->mem_pool_chain = List_new(Vptr,  (MALLOC)malloc, (MFREE)free);
-    ret.self->real_chk_size = cale_alloc_size(_chk_size);
-    ret.self->next = NULL;
-
-    while (!num_chunk_per_mem_block)
-    {
-        num_chunk_per_mem_block = (PAGE_SIZE * c) / cale_alloc_size(_chk_size);
-        c++;
-    }
-    ret.self->num_chunk_per_mem_block = num_chunk_per_mem_block;
-
-    node = MemPoolNode_new(_chk_size, ret.self->num_chunk_per_mem_block);
-
-    v.vptr_var = node.self;
-    List_push_back(ret.self->mem_pool_chain, v);
-
-    ret.self->num_chunk_per_mem_block *= 2;
-
-	ELock_Init(&ret.self->elock);
-    return ret;
-}
-
-void MemPool_delete(MemPool _self)
-{
-    Iterator iter = List_begin(SELF.mem_pool_chain);
-	while (iter)
-	{
-		var data = List_get_value(iter);
-		MemPoolNode node = {(mem_pool_node*)data.vptr_var};
-		MemPoolNode_delete(node);
-		iter = List_next(iter);
-	}
-	free(_self.self);
-}
-
-totel_refer_info MemPool_log(MemPool _self)
-{
-	Iterator iter = List_begin(SELF.mem_pool_chain);
-    totel_refer_info ret;
-    ret.unused_mem_size = 0;
-    ret.used_mem_size = 0;
-
-    while (iter)
-    {
-        var v = List_get_value(iter);
-        mem_pool_node* node = (mem_pool_node*)v.vptr_var;
-        totel_refer_info info = mem_pool_node_log(node);
-        ret.unused_mem_size += info.unused_mem_size;
-        ret.used_mem_size += info.used_mem_size;
-        iter = List_next(iter);
-    }
-    return ret;
-}
-
-bool MemPool_check(MemPool _self)
-{
-    Iterator iter = List_begin(SELF.mem_pool_chain);
-
-    while (iter)
-    {
-        var v = List_get_value(iter);
-        mem_pool_node* node = (mem_pool_node*)v.vptr_var;
-        MemPoolNode n = {node};
-		if (n.self->mem_list == (void*)0xffffffff)
-			return false;
-        if (!MemPoolNode_check(n))
-            return false;
-        iter = List_next(iter);
-    }
-    return true;
-}
-
-MemPoolList MemPoolList_new()
-{
-    MemPoolList ret;
-	ret.self = (struct _mem_pool_list*)malloc(sizeof(mem_pool_list));
-    ret.self->head = NULL;
-    ret.self->tail = NULL;
-    ret.self->elock = 0;
-    return ret;
-}
-void MemPoolList_delete(MemPoolList _self)
-{
-    free(_self.self);
-}
-MemPool MemPoolList_pop_front(MemPoolList _self)
-{
-    MemPool ret= {NULL};
-    ELock_lock(&SELF.elock);
-    if (SELF.head) {
-        ret.self = SELF.head;
-        SELF.head = SELF.head->next;
-        if (!SELF.head)
-            SELF.tail = NULL;
-    }
-    ELock_unlock(&SELF.elock);
-    return ret;
-}
-void MemPoolList_push_back(MemPoolList _self, MemPool _pool)
-{
-    ELock_lock(&SELF.elock);
-    _pool.self->next = NULL;
-    if (SELF.tail) {
-        SELF.tail->next = _pool.self;
-        SELF.tail = _pool.self;
-    }
-    else {
-        SELF.head = SELF.tail = _pool.self;
-    }
-    ELock_unlock(&SELF.elock);
-}
-
-typedef struct _mem_desc
-{
-    MemPool mem_pool;
-    Iterator iter;
-} mem_desc;
-
-void* MemPool_alloc(MemPool _self,
-                    Iterator* _iter,
-                    bool _is_safe_alloc)
-{
-	ELock_lock(&SELF.elock);
-	Iterator iter = List_begin(SELF.mem_pool_chain);
-	var v = List_get_value(iter);
-	MemPoolNode node = {(struct _mem_pool_node*)v.vptr_var};
-	void* ret = MemPoolNode_alloc(node, _is_safe_alloc);
-	*_iter = iter;
-	if (MemPoolNode_empty(node))
-	{
-		List_throw_back(SELF.mem_pool_chain, iter);
-		iter = List_begin(SELF.mem_pool_chain);
-		v = List_get_value(iter);
-		node.self = (struct _mem_pool_node*)v.vptr_var;
-		if (MemPoolNode_empty(node))
-		{
-			euint chk_size = SELF.real_chk_size;
-			euint num_chks = SELF.num_chunk_per_mem_block;
-			node = MemPoolNode_new(chk_size, num_chks);
-			v.vptr_var = node.self;
-			List_push_front(SELF.mem_pool_chain, v);
-			SELF.num_chunk_per_mem_block *= 2;
-			ELock_unlock(&SELF.elock);
-			return ret;
-		}
-	}
-	ELock_unlock(&SELF.elock);
-	return ret;
-}
-
-void MemPool_free(MemPool _self,
-                  Iterator _iter,
-                  void* _ptr)
-{
-	ELock_lock(&SELF.elock);
-    var v = List_get_value(_iter);
-    MemPoolNode node = {(struct _mem_pool_node*)v.vptr_var};
-    MemPoolNode_free(node, _ptr);
-	List_throw_front(SELF.mem_pool_chain, _iter);
-	ELock_unlock(&SELF.elock);
-}
-
-euint MemPool_chunk_size(MemPool _self)
-{
-    return _self.self->real_chk_size;
-}
-
 #define MAX_MEM_POOLS      512
 #define DEFAULT_CHUNK_SIZE 32
-
-typedef struct _mem_allocator
-{
-    MemPool mem_pools[MAX_MEM_POOLS];
-	ELock elock;
-    euint32 test_mark;
-	euint alloced_mem_size;
-	mem_pool_node* head;
-	mem_pool_node* tail;
-} mem_allocator;
-
-typedef struct _alloc_info
-{
-	MemPool mem_pool;
-	Iterator iter;
-} alloc_info;
 
 void* align_malloc_16(euint size)
 {
 #ifndef __APPLE__
 	return __mingw_aligned_malloc(size, 16);
 #else
-    return malloc(size);
+	return malloc(size);
 #endif
 }
 
-static MemAllocator g_MemAllocator = {NULL};
-MemAllocator MemAllocator_new()
-{
-    MemAllocator ret;
-    int i = 0;
-	ret.self = (struct _mem_allocator*)malloc(sizeof(mem_allocator));
-	memset(ret.self->mem_pools, 0, sizeof(ret.self->mem_pools));
-    for (; i < MAX_MEM_POOLS; i++)
-    {
-        MemPool mp =
-        MemPool_new( (i + 1) * DEFAULT_CHUNK_SIZE +
-                    ALLOC_INFO_RESERVED + REFER_INFO_RESERVED );
-        ret.self->mem_pools[i] = mp;
-    }
-	ELock_Init(&ret.self->elock);
-    ret.self->test_mark = (euint32)rand();
-	ret.self->alloced_mem_size = 0;
-	ret.self->head = NULL;
-	ret.self->tail = NULL;
-	return ret;
-}
-void MemAllocator_delete(MemAllocator _self)
-{
-	int i = 0;
-	for (; i < MAX_MEM_POOLS; i++)
-	{
-		if (SELF.mem_pools[i].self) 
-		{
-			MemPool_delete(SELF.mem_pools[i]);
-		}
-	}
-	free(_self.self);
-}
-void* MemAllocator_alloc(MemAllocator _self, euint _size, bool _is_safe_alloc)
-{
-	char* ret = NULL;
-	alloc_info ainfo = {{NULL}, NULL};
-	refer_info rinfo = {NULL, 0, _self.self->test_mark};
-	euint i = 0;
+#define PAGE_SIZE (512)
+#define MemPoolDef(x) x
+#define MemPoolListDef(x) x
+#define MemDescDef(x) x
+#define AllocInfoDef(x) x
+#define MemAllocatorDef(x) x
+#define MemPoolFunc(x) MemPool_##x
+#define MemPoolListFunc(x) MemPoolList_##x
+#define MemAllocatorFunc(x) MemAllocator_##x
+#define ALLOW_CONCURRENT
 
-	_size += (ALLOC_INFO_RESERVED + REFER_INFO_RESERVED);
-	i = _size / DEFAULT_CHUNK_SIZE;
+#include "emem_allocator.h"
 
-	if (i < MAX_MEM_POOLS)
-	{
-		MemPool mp = SELF.mem_pools[i];
-		Iterator iter;
-        ret = (char*)MemPool_alloc(mp, &iter, _is_safe_alloc);
-		ainfo.mem_pool = mp;
-		ainfo.iter = iter;
+#undef MemPoolDef
+#undef MemPoolListDef
+#undef MemDescDef
+#undef AllocInfoDef
+#undef MemAllocatorDef
+#undef MemPoolFunc
+#undef MemPoolListFunc
+#undef MemAllocatorFunc
+#undef ALLOW_CONCURRENT
 
-        /**
-        var data = List_get_value(iter);
-		MemPoolNode node = {(struct _mem_pool_node*)data.vptr_var};
-		if (node.self != _self.self->tail)
-		{
-			if (node.self == _self.self->head) { _self.self->head = node.self->next; }
-			if (node.self->prev)               { node.self->prev->next = node.self->next; }
-			if (node.self->next)               { node.self->next->prev = node.self->prev; }
-			node.self->next = NULL;
-			node.self->prev = _self.self->tail;
-			if (_self.self->tail)
-				_self.self->tail->next = node.self;
-			_self.self->tail = node.self;
-			if (!_self.self->head)
-				_self.self->head = node.self;
-		}
-        **/
-		_self.self->alloced_mem_size += MemPool_chunk_size(mp);
-	}
-	else
-	{
-#ifndef __APPLE__
-		ret = (char*)__mingw_aligned_malloc(_size, 16);
-#else
-        ret = (char*)malloc(_size);
-#endif
-		if (_is_safe_alloc)
-		    meminit(ret, _size);
-	}
-	((alloc_info*)ret)[0] = ainfo;
-	ret += ALLOC_INFO_RESERVED;
-	((refer_info*)ret)[0] = rinfo;
-	ret += REFER_INFO_RESERVED;
+#define MemPoolDef(x) Unlocked_##x
+#define MemPoolListDef(x) Unlocked_##x
+#define MemDescDef(x) Unlocked_##x
+#define AllocInfoDef(x) Unlocked##x
+#define MemAllocatorDef(x) Unlocked_##x
+#define MemPoolFunc(x) UnlockedMemPool_##x
+#define MemPoolListFunc(x) UnlockedMemPoolList_##x
+#define MemAllocatorFunc(x) UnlockedMemAllocator_##x
 
-	return ret;
-}
-void* MemAllocator_salloc(MemAllocator _self, euint _size)
-{
-	return MemAllocator_alloc(_self, _size, true);
-}
-void MemAllocator_free(MemAllocator _self, void* _ptr)
-{
-	refer_info* ip = NULL;
-	char* ptr = (char*)_ptr;
-	alloc_info info = {{NULL}, NULL};
+#include "emem_allocator.h"
 
-	if (!_ptr) {
-		return;
-	}
-	ptr -= (ALLOC_INFO_RESERVED + REFER_INFO_RESERVED);
-	info = ((alloc_info*)ptr)[0];
-
-	ip = ((refer_info*)((char*)_ptr - REFER_INFO_RESERVED));
-    
-    EAssert( ip->test_mark == _self.self->test_mark, "mem error" );
-	ip->file_name = NULL;
-	ip->line = 0;
-	ip->test_mark = 0;
-
-	if ( !to_ptr(info.mem_pool) )
-	{
-#ifndef __APPLE__
-		__mingw_aligned_free(ptr);
-#else
-        free(ptr);
-#endif
-	}
-	else
-	{
-		MemPool_free(info.mem_pool, info.iter, ptr);
-
-		_self.self->alloced_mem_size -= MemPool_chunk_size(info.mem_pool);
-	}
-}
-void MemAllocator_log(MemAllocator _self)
-{
-	euint i = 0;
-	totel_refer_info ret;
-	ret.unused_mem_size = 0;
-	ret.used_mem_size = 0;
-	for (; i < MAX_MEM_POOLS; i++)
-	{
-		if (SELF.mem_pools[i].self) 
-		{
-			totel_refer_info info = MemPool_log(SELF.mem_pools[i]);
-			ret.unused_mem_size += info.unused_mem_size;
-			ret.used_mem_size += info.used_mem_size;
-		}
-	}
-#if BIT_WIDTH == 32
-	elog("totel used mem %d totel unused mem %d", ret.used_mem_size, ret.unused_mem_size);
-#elif BIT_WIDTH == 64
-    elog("totel used mem %lld totel unused mem %lld", ret.used_mem_size, ret.unused_mem_size);
-#endif
-}
-bool MemAllocator_check(MemAllocator _self)
-{
-	euint i = 0;
-	for (; i < MAX_MEM_POOLS; i++)
-	{
-		if (SELF.mem_pools[i].self && !MemPool_check(SELF.mem_pools[i]))
-			return false;
-	}
-	return true;
-}
-euint MemAllocator_get_alloced_mem_size(MemAllocator _self)
-{
-	return _self.self->alloced_mem_size;
-}
+static mem_allocator* g_MemAllocator = NULL;
 
 #if 0
 #include <crtdbg.h>
@@ -682,7 +348,7 @@ int MyAllocHook( int nAllocType, void *pvData,  size_t nSize, int nBlockUse, lon
 void MInit()
 {
 #ifndef USE_C_MALLOC
-	if (!g_MemAllocator.self) {
+	if (!g_MemAllocator) {
         g_MemAllocator = MemAllocator_new();
 	} 
 #endif
@@ -778,7 +444,7 @@ bool MCheck()
 euint32 ETestMark()
 {
 #ifndef USE_C_MALLOC
-	return g_MemAllocator.self->test_mark;
+	return g_MemAllocator->test_mark;
 #else
     return 0;
 #endif
@@ -798,7 +464,7 @@ bool ETest(vptr ptr)
 vptr Ealloc(euint _size)
 {
 #ifndef USE_C_MALLOC
-	if (!g_MemAllocator.self) {
+	if (!g_MemAllocator) {
 	    g_MemAllocator = MemAllocator_new();
     }
 #endif
@@ -815,7 +481,7 @@ vptr Ealloc(euint _size)
 vptr SEalloc(euint _size)
 {
 #ifndef USE_C_MALLOC
-	if (!g_MemAllocator.self) {
+	if (!g_MemAllocator) {
 		g_MemAllocator = MemAllocator_new();
 	}
 #endif
