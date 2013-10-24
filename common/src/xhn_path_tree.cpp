@@ -29,6 +29,7 @@ int StrCmpW(const wchar_t* ws0, const wchar_t* ws1)
 }
 
 xhn::path_node::path_node()
+: is_folder(false)
 {
 }
 
@@ -56,6 +57,9 @@ void xhn::path_node::search(const wchar_t* path)
 			path_node_ptr child;
 			child = GC_ALLOC(path_node);
 			child->search((search_path + fd.name).c_str());
+			if (fd.attrib == 0x10) {
+			    child->is_folder = true;
+			}
 			child->next = children;
 			children = child;
 		}
@@ -67,7 +71,8 @@ void xhn::path_node::search(const wchar_t* path)
 void xhn::path_node::get_paths(xhn::vector<xhn::wstring>& result)
 {
 	if (!children) {
-		result.push_back(path_name);
+		if (!is_folder)
+		    result.push_back(path_name);
 		return;
 	}
     path_node_ptr child;

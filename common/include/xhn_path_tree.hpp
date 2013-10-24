@@ -13,6 +13,7 @@ public:
 	wstring path_name;
 	path_node_ptr next;
     path_node_ptr children;
+	bool is_folder;
 public:
 	path_node();
 	~path_node();

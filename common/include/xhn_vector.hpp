@@ -252,6 +252,8 @@ public:
     inline void resize(euint n) {
         reserve(n);
         euint curt_count = _get_size();
+		if (curt_count >= n)
+			return;
         euint d = n - curt_count;
         for (euint i = 0; i < d; i++) {
             m_ctor((T*)m_barrier);

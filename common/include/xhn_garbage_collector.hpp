@@ -389,6 +389,12 @@ public:
 		new(ptr) T();
 		return mem_handle<T>((T*)ptr);
 	}
+	template <typename A, typename B>
+	mem_handle<B> convert_alloc(const char* _file, euint32 _line, const char* _name) {
+		vptr ptr = alloc(sizeof(A), _file, _line, _name, (destructor)&gc_destructor<A>);
+		new(ptr) A();
+		return mem_handle<B>((B*)ptr);
+	}
 	template <typename T>
 	array<T> alloc_array(euint size, const char* _file, euint32 _line, const char* _name) {
 		vptr ptr = alloc(sizeof(T) * size, _file, _line, _name, NULL);
@@ -401,6 +407,7 @@ public:
 }
 
 #define GC_ALLOC(t) xhn::garbage_collector::get()->alloc<t>(__FILE__, __LINE__, NULL)
+#define GC_CONVERT_ALLOC(a, b) xhn::garbage_collector::get()->convert_alloc<a, b>(__FILE__, __LINE__, NULL)
 #define GC_ALLOC_ARRAY(t, s) xhn::garbage_collector::get()->alloc_array<t>(s, __FILE__, __LINE__, NULL)
 #endif
 
