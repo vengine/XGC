@@ -194,7 +194,7 @@ void RobotManager::MakeChannel(xhn::static_string sender,
 	if (iter != sRob->m_commandTransmissionChannels.end())
 		channel = iter->second;
 	else {
-		channel = ENEW SafedBuffer(1024 * 1024 * 8);
+		channel = ENEW SafedBuffer(1024 * 128);
 		sRob->m_commandTransmissionChannels.insert(
             xhn::make_pair(receiver, channel)
         );
