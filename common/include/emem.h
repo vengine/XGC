@@ -21,7 +21,11 @@ typedef struct _refer_info
 	euint32 line;
     euint32 test_mark;
 } refer_info;
-#define ALLOC_INFO_RESERVED 16
+#if BIT_WIDTH == 32
+#    define ALLOC_INFO_RESERVED 16
+#else
+#    define ALLOC_INFO_RESERVED 32
+#endif
 #define REFER_INFO_RESERVED 16
 
 #define _MEM_BLOCK_HEAD_SIZE_ sizeof(euint) * 8
@@ -131,3 +135,4 @@ API_EXPORT euint UnlockedMemAllocator_get_alloced_mem_size(Unlocked_mem_allocato
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
+

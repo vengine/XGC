@@ -18,8 +18,8 @@
 #include <pthread.h>
 #else
 #define _SCHED_H
-#include </usr/include/sched.h>
-#include </usr/include/pthread.h>
+///#include </usr/include/sched.h>
+///#include </usr/include/pthread.h>
 #endif
 namespace xhn
 {

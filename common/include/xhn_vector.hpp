@@ -325,6 +325,22 @@ public:
 		_init(v);
 		return *this;
 	}
+    bool operator < (const vector& v) const {
+        const_iterator viter = v.begin();
+        const_iterator vend = v.end();
+        const_iterator iter = begin();
+        const_iterator end = end();
+        for (; iter != end && viter != vend; iter++, viter++) {
+            if (*iter < *viter)
+                return true;
+            else if (*iter > *viter)
+                return false;
+        }
+        if (iter != end && viter == vend)
+            return true;
+        else
+            return false;
+    }
     vector() {
         euint size = m_get_elem_real_size();
         m_begin_addr = ( char * ) Malloc ( size * 32 );

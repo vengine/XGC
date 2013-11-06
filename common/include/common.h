@@ -180,6 +180,7 @@ or
 #        define BIT_WIDTH 64
 
 #    elif defined(__APPLE__)
+#        include <pthread.h>
 #        ifdef __i386__
 #            define BIT_WIDTH 32
 #        else

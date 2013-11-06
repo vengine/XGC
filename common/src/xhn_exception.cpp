@@ -44,8 +44,13 @@ Exception::~Exception() {
 const char* Exception::what() {
 	const RTTI* rtti = GetRTTI();
 
-	m_body->m_what = "VEngineError:";
+	m_body->m_what = "Error;";
+    m_body->m_what += m_body->m_file;
+    m_body->m_what += ';';
+    m_body->m_what += (euint)m_body->m_line;
+    m_body->m_what += ';';
 	m_body->m_what += rtti->GetTypeName();
+    m_body->m_what += ';';
 	m_body->m_what += m_body->m_msg;
 
 	return m_body->m_what.c_str();

@@ -58,6 +58,9 @@ namespace xhn
 		inline euint size() const {
 			return _get_size();
 		}
+        inline euint element_size() const {
+            return m_ele_size;
+        }
 		inline void reserve(euint n) {
 			if ( n > m_totel_ele_count ) {
 				euint curt_count = _get_size();
@@ -83,17 +86,22 @@ namespace xhn
 			euint curt_count = _get_size();
 
 			if ( curt_count + 1 > m_totel_ele_count ) {
-				reserve(m_totel_ele_count * 8);
+				reserve((curt_count + 1) * 8);
 			}
 
 			memcpy(m_barrier, _ele, m_ele_size);
 		    m_barrier += m_ele_size;
 		}
 		inline void resize(euint n) {
-			reserve(n);
-			euint curt_count = _get_size();
-			euint d = n - curt_count;
-			m_barrier += m_ele_size * d;
+            if (n > m_totel_ele_count) {
+                reserve(n);
+                euint curt_count = _get_size();
+                euint d = n - curt_count;
+                m_barrier += m_ele_size * d;
+            }
+			else {
+                m_barrier = m_begin_addr + ( m_ele_size * n );
+            }
 		}
 		inline void flush(vptr pxl) {
 			char* ptr = m_begin_addr;

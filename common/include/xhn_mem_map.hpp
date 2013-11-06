@@ -28,58 +28,15 @@
 #include "xhn_atomic_operation.hpp"
 #include "rwbuffer.h"
 
+#include "xhn_btree.hpp"
+
 #include "xhn_config.hpp"
 
 namespace xhn
 {
     typedef void (*destructor) (void*);
-    class mem_btree_node
+    class mem_btree_node : public btree_node
     {
-	public:
-		//////////////////////////////////////////////////////////////////////////
-		void* operator new( size_t nSize )
-		{
-			if (!s_allocator) {
-				s_allocator = UnlockedMemAllocator_new();
-			}
-			return UnlockedMemAllocator_alloc(s_allocator, nSize, false);
-		}
-		void operator delete( void *p)
-		{
-			UnlockedMemAllocator_free(s_allocator, p);
-		}
-		void* operator new( size_t nSize, void* ptr )
-		{
-			EAssert(((ref_ptr)ptr % 16) == 0, "new object error");
-			return ptr;
-		}
-		void operator delete( void *p, void* ptr )
-		{
-		}
-		//////////////////////////////////////////////////////////////////////////
-		void* operator new( size_t nSize, const char* file,int line )
-		{
-			if (!s_allocator) {
-				s_allocator = UnlockedMemAllocator_new();
-			}
-			return UnlockedMemAllocator_alloc(s_allocator, nSize, false);
-		}
-		void operator delete( void *p, const char* file,int line )
-		{
-			UnlockedMemAllocator_free(s_allocator, p);
-		}
-		//////////////////////////////////////////////////////////////////////////
-		void* operator new[]( size_t nSize )
-		{
-			if (!s_allocator) {
-				s_allocator = UnlockedMemAllocator_new();
-			}
-			return UnlockedMemAllocator_alloc(s_allocator, nSize, false);
-		}
-		void operator delete[]( void* ptr, size_t nSize )
-		{
-			UnlockedMemAllocator_free(s_allocator, ptr);
-		}
 	public:
 		static Unlocked_mem_allocator* s_allocator;
 	public:
@@ -298,12 +255,6 @@ namespace xhn
 			        FLessProc<mem_btree_node*>, 
 			        mem_btree_node::FSetNodeAllocator<mem_btree_node*>> mem_set;
     public:
-        euint8 section;
-		mem_btree_node* parent;
-        mem_btree_node* children[16];
-        euint32 num_children;
-        vptr begin_addr;
-        vptr end_addr;
 		input_mem_set input_set;
 		mem_map output_map;
 		esint32 root_ref_count;
@@ -315,15 +266,9 @@ namespace xhn
         esint32 orphan_count;
         destructor dest;
 		bool is_garbage;
-		bool is_deleted;
     public:
         mem_btree_node()
-        : section(0)
-		, parent(NULL)
-        , num_children(0)
-        , begin_addr( (vptr)((ref_ptr)-1) )
-        , end_addr( NULL )
-		, root_ref_count(0)
+        : root_ref_count(0)
 		, prev( NULL )
 		, next( NULL )
 		, root_prev( NULL )
@@ -332,73 +277,7 @@ namespace xhn
         , orphan_count( 100 )
         , dest( NULL )
 		, is_garbage(false)
-		, is_deleted(false)
-        {
-            memset(children, 0, sizeof(children));
-        }
-        mem_btree_node* get_child_node(euint8 sec) {
-            return children[sec & 0x0f];
-        }
-        mem_btree_node* get_child_node(vptr ptr) {
-            if ((ref_ptr)ptr >= (ref_ptr)begin_addr &&
-                (ref_ptr)ptr <= (ref_ptr)end_addr) {
-                for (int i = 0; i < 16; i++) {
-                    mem_btree_node* node = children[i];
-                    if (!node)
-                        continue;
-                    if ((ref_ptr)ptr >= (ref_ptr)node->begin_addr &&
-                        (ref_ptr)ptr <= (ref_ptr)node->end_addr) {
-                        return node;
-                    }
-                }
-            }
-            return NULL;
-        }
-        bool add_child_node(euint8 sec, mem_btree_node* node) {
-            if (children[sec & 0x0f])
-                return false;
-            children[sec & 0x0f] = node;
-			node->parent = this;
-            num_children++;
-            return true;
-        }
-        
-        mem_btree_node* remove_child_node(euint8 sec, bool& is_deleted) {
-            mem_btree_node* node = children[sec & 0x0f];
-            if (node) {
-                children[sec & 0x0f] = NULL;
-                num_children--;
-                if (!num_children)
-                    is_deleted = true;
-                else
-                    is_deleted = false;
-                return node;
-            }
-            else {
-                is_deleted = false;
-                return 0;
-            }
-        }
-        
-        void add_update(mem_btree_node* node) {
-            if ((ref_ptr)node->begin_addr < (ref_ptr)begin_addr)
-                begin_addr = node->begin_addr;
-            if ((ref_ptr)node->end_addr > (ref_ptr)end_addr)
-                end_addr = node->end_addr;
-        }
-        void remove_update() {
-            begin_addr = (vptr)((ref_ptr)-1);
-            end_addr = 0;
-            for (int i = 0; i < 16; i++) {
-                mem_btree_node* node = children[i];
-                if (!node)
-                    continue;
-                if ((ref_ptr)node->begin_addr < (ref_ptr)begin_addr)
-                    begin_addr = node->begin_addr;
-                if ((ref_ptr)node->end_addr > (ref_ptr)end_addr)
-                    end_addr = node->end_addr;
-            }
-        }
+        {}
 
 		void Attach(const vptr handle, mem_btree_node* mem);
 		void Detach(const vptr handle, mem_btree_node* mem);
@@ -410,143 +289,65 @@ namespace xhn
         bool TrackBack();
     };
     
-    class mem_btree
+    class FMemNodeAllocator
+    {
+    private:
+        const char* m_curt_name;
+        destructor m_curt_dest;
+    public:
+        FMemNodeAllocator()
+        : m_curt_name(NULL)
+        , m_curt_dest(NULL)
+        {
+        }
+        
+        void set(const char* name, destructor dest)
+        {
+            m_curt_name = name;
+            m_curt_dest = dest;
+        }
+        
+        void deallocate(btree_node* ptr, euint)
+        {
+            UnlockedMemAllocator_free(mem_btree_node::s_allocator, ptr);
+        }
+        
+        btree_node* allocate(euint count)
+        {
+            if (!mem_btree_node::s_allocator) {
+                mem_btree_node::s_allocator = UnlockedMemAllocator_new();
+            }
+            return (btree_node*)UnlockedMemAllocator_alloc(
+                        mem_btree_node::s_allocator,
+                        count * sizeof(mem_btree_node),
+                        false);
+        }
+        
+        void construct(btree_node* ptr)
+        {
+            new ( (mem_btree_node*)ptr ) mem_btree_node ();
+        }
+        
+        void pre_destroy(btree_node* ptr)
+        {
+            if (((mem_btree_node*)ptr)->dest) {
+				((mem_btree_node*)ptr)->dest(((mem_btree_node*)ptr)->begin_addr);
+			}
+        }
+        void destroy(btree_node* ptr)
+        {
+            ((mem_btree_node*)ptr)->~mem_btree_node();
+        }
+    };
+    
+    class mem_btree : public btree<FMemNodeAllocator>
     {
     public:
-        mem_btree_node* root;
-		euint count;
-		euint alloced_size;
-    public:
-        mem_btree()
-			: count(0)
-			, alloced_size(0)
-        {
-            root = ENEW mem_btree_node();
-        }
         mem_btree_node* insert(const vptr ptr, euint size, const char* name, destructor dest) {
-			bool added = false;
-            mem_btree_node* track_buffer[sizeof(ptr) * 2 + 1];
-            mem_btree_node* node = root;
-            euint num_bytes = sizeof(ptr);
-            ref_ptr mask = (ref_ptr)0x0f;
-            euint shift = sizeof(ptr) * 8 - 4;
-            mask <<= shift;
-            for (euint i = 0; i < num_bytes * 2; i++) {
-                track_buffer[sizeof(ptr) * 2 - i] = node;
-                ref_ptr rptr = (ref_ptr)ptr;
-                rptr &= mask;
-                rptr >>= shift;
-                euint8 section = (euint8)rptr;
-                mem_btree_node* next = node->get_child_node(section);
-                if (!next) {
-                    next = ENEW mem_btree_node();
-                    next->section = section;
-                    node->add_child_node(section, next);
-					added = true;
-                }
-                node = next;
-                shift -= 4;
-                mask >>= 4;
-            }
-            track_buffer[0] = node;
-            node->name = name;
-            node->dest = dest;
-            node->begin_addr = ptr;
-            node->end_addr = (vptr)((ref_ptr)ptr + size);
-            for (euint i = 1; i < num_bytes * 2 + 1; i++) {
-                track_buffer[i]->add_update(track_buffer[i - 1]);
-            }
-			if (added) {
-				count++;
-				alloced_size += size;
-                return node;
-			}
-            else {
-                return NULL;
-            }
+            allocater.set(name, dest);
+            return (mem_btree_node*)btree<FMemNodeAllocator>::insert(ptr, size);
         }
-        bool remove(const vptr ptr) {
-            mem_btree_node* track_buffer[sizeof(ptr) * 2 + 1];
-            mem_btree_node* node = root;
-            euint num_bytes = sizeof(ptr);
-            for (euint i = 0; i < num_bytes * 2; i++) {
-                track_buffer[sizeof(ptr) * 2 - i] = node;
-                mem_btree_node* next = node->get_child_node(ptr);
-                if (!next)
-                    return false;
-                node = next;
-            }
-			///if (node->prev) { node->prev->next = node->next; }
-			///if (node->next) { node->next->prev = node->prev; }
-            track_buffer[0] = node;
-            
-			if (node->is_deleted)
-				return false;
-			node->is_deleted = true;
-			if (node->dest) {
-				node->dest(node->begin_addr);
-			}
-			alloced_size -= ((ref_ptr)node->end_addr - (ref_ptr)node->begin_addr);
-
-            for (euint i = 1; i < num_bytes * 2 + 1; i++) {
-                mem_btree_node* next = track_buffer[i];
-                mem_btree_node* prev = track_buffer[i - 1];
-                bool is_deleted = false;
-                node = next->remove_child_node(prev->section, is_deleted);
-                track_buffer[i - 1] = NULL;
-                delete node;
-                if (!is_deleted)
-                    break;
-            }
-            for (euint i = 1; i < num_bytes * 2 + 1; i++) {
-                node = track_buffer[i];
-                if (node) {
-                    node->remove_update();
-                }
-            }
-			count--;
-            return true;
-        }
-		/**
-		void remove(mem_btree_node* node) {
-			euint num_bytes = sizeof(vptr);
-			mem_btree_node* next = node->parent;
-			mem_btree_node* prev = node;
-			for (euint i = 1; i < num_bytes * 2 + 1; i++) {
-				bool is_deleted = false;
-				node = next->remove_child_node(prev->section, is_deleted);
-				prev = next;
-				next = next->parent;
-				delete node;
-				if (!is_deleted)
-					break;
-			}
-			while (next) {
-				node = next;
-				node->remove_update();
-                next = node->parent;
-			}
-			count--;
-		}
-		**/
-        mem_btree_node* find(const vptr ptr) {
-            mem_btree_node* node = root;
-            euint num_bytes = sizeof(ptr);
-            for (euint i = 0; i < num_bytes * 2; i++) {
-                mem_btree_node* next = node->get_child_node(ptr);
-                if (!next)
-                    return NULL;
-                node = next;
-            }
-            return node;
-        }
-		euint size() {
-			return count;
-		}
         void push_detach_node(mem_btree_node* node);
-		euint get_alloced_size() {
-			return alloced_size;
-		}
     };
 }
 

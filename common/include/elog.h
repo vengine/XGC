@@ -16,8 +16,8 @@
 #include <pthread.h>
 #else
 #define _SCHED_H
-#include </usr/include/sched.h>
-#include </usr/include/pthread.h>
+///#include </usr/include/sched.h>
+///#include </usr/include/pthread.h>
 #endif
 extern pthread_rwlock_t g_lock;
 #define ELOG_BUFFER_SIZE 4096 * 2

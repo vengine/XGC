@@ -52,6 +52,13 @@ public:
         m_size = count;
         m_hash = _hash ( m_str );
     }
+    string_base ( const C *str, euint size ) {
+        m_str = ( C * ) Malloc ( (size + 1) * sizeof(C) );
+        memcpy ( m_str, str, size * sizeof(C) );
+        m_str[size] = 0;
+        m_size = size;
+        m_hash = _hash ( m_str );
+    }
 	string_base ( const vector< C, FGetCharRealSizeProc<C> >& str ) {
         euint count = str.size();
 
@@ -208,6 +215,15 @@ public:
 		m_hash = _hash ( m_str );
 		return *this;
 	}
+    string_base &operator += ( euint i ) {
+        char mbuf[256];
+#if BIT_WIDTH == 32
+        snprintf(mbuf, 255, "%d", i);
+#else
+        snprintf(mbuf, 255, "%lld", i);
+#endif
+		return (operator+=(mbuf));
+	}
     euint find ( const string_base &str, euint pos = 0 ) const {
         if ( m_size <= pos || !m_size || !str.m_size ) {
             return npos;
@@ -333,6 +349,32 @@ public:
         ret.m_hash = _hash ( str );
         return ret;
     }
+    vector< string_base > split( C ch ) const {
+        vector< string_base > ret;
+        euint subStrSize = 0;
+        euint begin = 0;
+        euint count = 0;
+        while (m_str[count]) {
+            if (m_str[count] == ch) {
+                subStrSize = count - begin;
+                if (subStrSize) {
+                    string_base tmp(&m_str[begin], subStrSize);
+                    ret.push_back(tmp);
+                }
+                begin = count + 1;
+            }
+            count++;
+        }
+        if (count) {
+            count--;
+            subStrSize = count - begin;
+            if (subStrSize) {
+                string_base tmp(&m_str[begin], subStrSize);
+                ret.push_back(tmp);
+            }
+        }
+        return ret;
+    }
     euint size() const {
         return m_size;
     }
@@ -355,11 +397,11 @@ public:
 			if (m_size) {
                 memcpy(tmp, m_str, m_size * sizeof(C));
 			}
-			m_size = newSize;
-            m_hash = _hash ( tmp );
 			Mfree(m_str);
 			m_str = tmp;
 		}
+        m_size = newSize;
+        m_hash = _hash ( m_str );
 	}
 };
 

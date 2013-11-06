@@ -270,7 +270,7 @@ void MemAllocatorFunc(delete)(MemAllocatorDef(mem_allocator)* _self)
 void* MemAllocatorFunc(alloc)(MemAllocatorDef(mem_allocator)* _self, euint _size, bool _is_safe_alloc)
 {
 	char* ret = NULL;
-	AllocInfoDef(alloc_info) ainfo = {{NULL}, NULL};
+	AllocInfoDef(alloc_info) ainfo = {NULL, NULL};
 	refer_info rinfo = {NULL, 0, _self->test_mark};
 	euint i = 0;
 
@@ -312,7 +312,7 @@ void MemAllocatorFunc(free)(MemAllocatorDef(mem_allocator)* _self, void* _ptr)
 {
 	refer_info* ip = NULL;
 	char* ptr = (char*)_ptr;
-	AllocInfoDef(alloc_info) info = {{NULL}, NULL};
+	AllocInfoDef(alloc_info) info = {NULL, NULL};
 
 	if (!_ptr) {
 		return;

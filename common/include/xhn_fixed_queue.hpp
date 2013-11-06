@@ -27,7 +27,7 @@ public:
 			, m_bottom_barrier(bottom_barrier)
 		{}
 	public:
-		inline iterator(iterator& iter)
+		inline iterator(const iterator& iter)
 			: m_ptr(iter.m_ptr)
 			, m_top_barrier(iter.m_top_barrier)
 			, m_bottom_barrier(iter.m_bottom_barrier)

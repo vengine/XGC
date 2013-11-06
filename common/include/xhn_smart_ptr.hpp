@@ -159,6 +159,9 @@ public:
 	bool operator!() const {
 		return !m_ptr;
 	}
+    operator bool () const {
+        return m_ptr != NULL;
+    }
 
 	CheckoutHandle Checkout()
 	{

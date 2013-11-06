@@ -18,6 +18,10 @@
 
 #ifndef __ecg__apple_file_manager__
 #define __ecg__apple_file_manager__
+#include "xhn_vector.hpp"
+#include "xhn_string.hpp"
+#include "xhn_smart_ptr.hpp"
+#include "xhn_file_stream.hpp"
 
 class FilenameArray
 {
@@ -32,6 +36,42 @@ enum FileDirectory
 };
 
 void GetFilenames(FileDirectory dir, FilenameArray* filenames);
+
+void GetPaths(const char* baseFolder,
+              xhn::vector<xhn::string>& subFolders,
+              xhn::vector<xhn::string>& paths);
+
+class AppleFile : public xhn::file_stream
+{
+    friend class AppleFileManager;
+private:
+    vptr m_fileHandle;
+    xhn::wstring m_path;
+public:
+    AppleFile()
+    : m_fileHandle(NULL)
+    {}
+    ~AppleFile();
+    virtual euint64 read(euint8* buffer, euint64 size);
+    virtual bool write(const euint8* buffer, euint64 size);
+    virtual euint64 get_pos();
+    virtual euint64 set_pos(euint64 pos);
+    ///virtual euint8& operator[] (euint64 pos);
+};
+
+class AppleFileManager : public xhn::file_manager
+{
+private:
+    vptr m_fileManager;
+public:
+    AppleFileManager();
+    ~AppleFileManager();
+    virtual bool is_exist(const xhn::wstring& path, bool& is_directory);
+    virtual bool create_directory(const xhn::wstring& dir);
+    virtual bool create_file(const xhn::wstring& path);
+    virtual xhn::file_stream_ptr open(const xhn::wstring& path);
+    virtual xhn::file_stream_ptr create_and_open(const xhn::wstring& path);
+};
 #endif /* defined(__ecg__apple_file_manager__) */
 
 /**

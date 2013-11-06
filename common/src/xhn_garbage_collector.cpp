@@ -197,12 +197,12 @@ void xhn::garbage_collect_robot::remove ( const vptr p ) {
 void xhn::garbage_collect_robot::attach ( const vptr section, vptr mem ) {
 	mem_btree_node* node = find_node_in_queue(mem);///m_btree.find(mem);
 	if (!node) {
-		node = m_btree.find(mem);
+		node = (mem_btree_node*)m_btree.find(mem);
 	}
 	if (node) {
 		mem_btree_node* parent = find_node_in_queue(section);///m_btree.find(section);
 		if (!parent) {
-			parent = m_btree.find(section);
+			parent = (mem_btree_node*)m_btree.find(section);
 		}
 		if (parent) {
 			parent->Attach(section, node);
@@ -332,12 +332,12 @@ void xhn::garbage_collect_robot::attach ( const vptr section, vptr mem ) {
 void xhn::garbage_collect_robot::detach ( const vptr section, vptr mem ) {
 	mem_btree_node* node = find_node_in_queue(mem);///m_btree.find(mem);
 	if (!node) {
-		node = m_btree.find(mem);
+		node = (mem_btree_node*)m_btree.find(mem);
 	}
 	if (node) {
 		mem_btree_node* parent = find_node_in_queue(section);///m_btree.find(section);
 		if (!parent) {
-			parent = m_btree.find(section);
+			parent = (mem_btree_node*)m_btree.find(section);
 		}
 		if (parent) {
 			parent->Detach(section, node);
@@ -582,7 +582,7 @@ void xhn::garbage_collect_robot::track() {
 	euint delta_mem = 0;
 	if (m_btree.count > prev_alloced_mems)
 		delta_mem = m_btree.count - prev_alloced_mems;
-	int count = delta_mem * 5;
+	esint count = (esint)(delta_mem * 5);
 	prev_alloced_mems = m_btree.count;
 
 	mem_btree_node* node = tail;

@@ -3,10 +3,17 @@
 #include "xhn_string.hpp"
 #include "xhn_smart_ptr.hpp"
 #include "xhn_garbage_collector.hpp"
+#define USE_SMART_PTR
 namespace xhn
 {
+wstring get_upper_directory(const wstring& path);
+void force_open_file(const wstring& path);
 class path_node;
+#ifdef USE_SMART_PTR
+typedef SmartPtr<path_node> path_node_ptr;
+#else
 typedef garbage_collector::mem_handle<path_node> path_node_ptr;
+#endif
 class path_node : public RefObject
 {
 public:
