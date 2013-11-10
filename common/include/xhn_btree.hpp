@@ -23,7 +23,6 @@ namespace xhn
     class btree_node
     {
     public:
-        volatile esint32 ref_count;
         euint8 section;
 		btree_node* parent;
         btree_node* children[16];
@@ -33,8 +32,7 @@ namespace xhn
         bool is_deleted;
     public:
         btree_node()
-        : ref_count(0)
-        , section(0)
+        : section(0)
 		, parent(NULL)
         , num_children(0)
         , begin_addr( (Addr)((RefAddr)-1) )
@@ -65,7 +63,6 @@ namespace xhn
             if (children[sec & 0x0f])
                 return false;
             children[sec & 0x0f] = node;
-            node->inc_ref_count();
 			node->parent = this;
             num_children++;
             return true;
@@ -80,7 +77,6 @@ namespace xhn
                     is_deleted = true;
                 else
                     is_deleted = false;
-                node->dec_ref_count();
                 return node;
             }
             else {
@@ -108,79 +104,11 @@ namespace xhn
                     end_addr = node->end_addr;
             }
         }
-        inline void inc_ref_count() {
-            AtomicIncrement(&ref_count);
-        }
-        inline esint32 dec_ref_count() {
-            return AtomicDecrement(&ref_count);
-        }
-        inline esint32 get_ref_count() {
-            return ref_count;
-        }
     };
     
     template <typename T, typename Addr, typename RefAddr, typename NodeAllocator>
     class btree : public MemObject
     {
-    public:
-        class node_handle
-        {
-        public:
-            T* ptr;
-            inline void _inc(T* p) {
-                if (p)
-                {
-                    p->inc_ref_count();
-                }
-            }
-            inline void _dec() {
-                if (ptr && !ptr->dec_ref_count()) {
-                    NodeAllocator allocater;
-                    allocater.destroy(ptr);
-                    allocater.deallocate(ptr, 1);
-                }
-            }
-            explicit node_handle(const node_handle& p)
-            {
-                _inc((T*)p.ptr);
-                ptr = (T*)p.ptr;
-            }
-            explicit node_handle()
-            : ptr(NULL)
-            {}
-            
-            ~node_handle()
-            {
-                _dec();
-            }
-            void operator = (T* p)
-            {
-                _inc(p);
-                _dec();
-                ptr = p;
-            }
-            void operator = (node_handle& p)
-            {
-                _inc(p.ptr);
-                _dec();
-                ptr = p.ptr;
-            }
-            bool operator!() const {
-                return !ptr;
-            }
-            operator bool () const {
-                return ptr != NULL;
-            }
-            T* get() {
-                return ptr;
-            }
-            T* operator ->() {
-                return ptr;
-            }
-            const T* operator ->() const {
-                return ptr;
-            }
-        };
     public:
         T* root;
 		euint count;
@@ -193,13 +121,11 @@ namespace xhn
         {
             root = allocater.allocate(1);
             allocater.construct(root, NULL);
-            root->inc_ref_count();
         }
         T* insert(const Addr ptr, euint size, vptr data) {
 			bool added = false;
-            node_handle track_buffer[sizeof(ptr) * 2 + 1];
-            node_handle node;
-            node = root;
+            T* track_buffer[sizeof(ptr) * 2 + 1];
+            T* node = root;
             euint num_bytes = sizeof(ptr);
             RefAddr mask = (RefAddr)0x0f;
             euint shift = sizeof(ptr) * 8 - 4;
@@ -210,14 +136,12 @@ namespace xhn
                 rptr &= mask;
                 rptr >>= shift;
                 euint8 section = (euint8)rptr;
-                node_handle next;
-                next = (T*)node->get_child_node(section);
+                T* next = (T*)node->get_child_node(section);
                 if (!next) {
-                    T* tmp = allocater.allocate(1);
-                    allocater.construct(tmp, data);
-                    next = tmp;
+                    next = allocater.allocate(1);
+                    allocater.construct(next, data);
                     next->section = section;
-                    node->add_child_node(section, next.get());
+                    node->add_child_node(section, next);
 					added = true;
                 }
                 node = next;
@@ -228,12 +152,12 @@ namespace xhn
             node->begin_addr = ptr;
             node->end_addr = (Addr)((RefAddr)ptr + size - 1);
             for (euint i = 1; i < num_bytes * 2 + 1; i++) {
-                track_buffer[i]->add_update(track_buffer[i - 1].get());
+                track_buffer[i]->add_update(track_buffer[i - 1]);
             }
 			if (added) {
 				count++;
 				alloced_size += size;
-                return node.get();
+                return node;
 			}
             else {
                 return NULL;
@@ -241,40 +165,32 @@ namespace xhn
         }
 
         bool remove(const Addr ptr) {
-            node_handle track_buffer[sizeof(ptr) * 2 + 1];
-            node_handle node;
-            node = root;
+            T* track_buffer[sizeof(ptr) * 2 + 1];
+            T* node = root;
             euint num_bytes = sizeof(ptr);
             for (euint i = 0; i < num_bytes * 2; i++) {
                 track_buffer[sizeof(ptr) * 2 - i] = node;
-                node_handle next;
-                next = (T*)node->get_child_node(ptr);
+                T* next = (T*)node->get_child_node(ptr);
                 if (!next)
                     return false;
                 node = next;
             }
-			///if (node->prev) { node->prev->next = node->next; }
-			///if (node->next) { node->next->prev = node->prev; }
             track_buffer[0] = node;
             
 			if (node->is_deleted)
 				return false;
 			node->is_deleted = true;
-            ///if (node->dest) {
-			///	node->dest(node->begin_addr);
-			///}
-            allocater.pre_destroy(node.get());
+            allocater.pre_destroy(node);
 			alloced_size -= ((RefAddr)node->end_addr - (RefAddr)node->begin_addr);
             
             for (euint i = 1; i < num_bytes * 2 + 1; i++) {
-                node_handle next;
-                node_handle prev;
-                next = track_buffer[i];
-                prev = track_buffer[i - 1];
+                T* next = track_buffer[i];
+                T* prev = track_buffer[i - 1];
                 bool is_deleted = false;
                 node = (T*)next->remove_child_node(prev->section, is_deleted);
+                allocater.destroy(node);
+                allocater.deallocate(node, 1);
                 track_buffer[i - 1] = NULL;
-                
                 if (!is_deleted)
                     break;
             }
@@ -296,12 +212,11 @@ namespace xhn
 			alloced_size -= ((RefAddr)node->end_addr - (RefAddr)node->begin_addr);
             
             while (node->parent) {
-                node_handle next = node->parent;
+                T* next = node->parent;
                 bool is_deleted = false;
                 next->remove_child_node(node->section, is_deleted);
-                ///delete node;
-                ///allocater.destroy(node);
-                ///allocater.deallocate(node);
+                allocater.destroy(node);
+                allocater.deallocate(node, 1);
                 if (!is_deleted)
                     break;
                 node->remove_update();
