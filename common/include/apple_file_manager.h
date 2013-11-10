@@ -22,7 +22,8 @@
 #include "xhn_string.hpp"
 #include "xhn_smart_ptr.hpp"
 #include "xhn_file_stream.hpp"
-
+#include "xhn_btree.hpp"
+#include  "xhn_lock.hpp"
 class FilenameArray
 {
 public:
@@ -47,16 +48,21 @@ class AppleFile : public xhn::file_stream
 private:
     vptr m_fileHandle;
     xhn::wstring m_path;
+    euint64 m_baseOffset;
 public:
     AppleFile()
     : m_fileHandle(NULL)
+    , m_baseOffset(0)
     {}
     ~AppleFile();
     virtual euint64 read(euint8* buffer, euint64 size);
     virtual bool write(const euint8* buffer, euint64 size);
+    virtual euint64 get_size();
     virtual euint64 get_pos();
     virtual euint64 set_pos(euint64 pos);
-    ///virtual euint8& operator[] (euint64 pos);
+    virtual void set_base_offset(euint64 offs);
+    virtual euint8& operator[] (euint64 pos);
+    virtual const euint8& operator[] (euint64 pos) const;
 };
 
 class AppleFileManager : public xhn::file_manager

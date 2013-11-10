@@ -285,7 +285,7 @@ void* align_malloc_16(euint size)
 #define MemAllocatorFunc(x) MemAllocator_##x
 #define ALLOW_CONCURRENT
 
-#include "../include/emem_allocator.h"
+#include "emem_allocator.h"
 
 #undef MemPoolDef
 #undef MemPoolListDef
@@ -306,7 +306,7 @@ void* align_malloc_16(euint size)
 #define MemPoolListFunc(x) UnlockedMemPoolList_##x
 #define MemAllocatorFunc(x) UnlockedMemAllocator_##x
 
-#include "../include/emem_allocator.h"
+#include "emem_allocator.h"
 
 static mem_allocator* g_MemAllocator = NULL;
 

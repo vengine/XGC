@@ -18,18 +18,18 @@ inline void AtomicIncrement(volatile esint32* i)
 {
 	InterlockedIncrement((volatile LONG*)i);
 }
-inline void AtomicDecrement(volatile esint32* i)
+inline euint32 AtomicDecrement(volatile esint32* i)
 {
-	InterlockedDecrement((volatile LONG*)i);
+	return InterlockedDecrement((volatile LONG*)i);
 }
 #elif defined (__APPLE__)
 inline void AtomicIncrement(volatile esint32* i)
 {
 	OSAtomicIncrement32(i);
 }
-inline void AtomicDecrement(volatile esint32* i)
+inline euint32 AtomicDecrement(volatile esint32* i)
 {
-	OSAtomicDecrement32(i);
+	return OSAtomicDecrement32(i);
 }
 #endif
 

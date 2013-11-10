@@ -25,6 +25,7 @@ namespace xhn
 	public:
 		struct FCharProc {
 			void operator() ( vptr to, vptr from ) {
+                *((char*)to) = 0;
 			}
 		};
 	public:

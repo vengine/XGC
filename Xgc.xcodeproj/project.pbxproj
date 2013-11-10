@@ -31,6 +31,7 @@
 		681EE52417F9A4BA00952372 /* robot_thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 681EE52217F9A4BA00952372 /* robot_thread.cpp */; };
 		681EE52517F9A4BA00952372 /* robot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 681EE52317F9A4BA00952372 /* robot.cpp */; };
 		681EE52717F9A52000952372 /* Xgc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 681EE52617F9A52000952372 /* Xgc.cpp */; };
+		68C1084F182E4F8000FACBE8 /* xhn_file_stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 68C1084D182E4F8000FACBE8 /* xhn_file_stream.cpp */; };
 		68F877BE17F9A3F500FAA0DF /* Xgc.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 68F877BD17F9A3F500FAA0DF /* Xgc.1 */; };
 /* End PBXBuildFile section */
 
@@ -121,6 +122,7 @@
 		681EE52317F9A4BA00952372 /* robot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = robot.cpp; path = framework/src/robot.cpp; sourceTree = "<group>"; };
 		681EE52617F9A52000952372 /* Xgc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Xgc.cpp; sourceTree = "<group>"; };
 		6896F5FC1829E78E00B1765D /* xhn_btree.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = xhn_btree.hpp; path = common/include/xhn_btree.hpp; sourceTree = "<group>"; };
+		68C1084D182E4F8000FACBE8 /* xhn_file_stream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xhn_file_stream.cpp; path = common/src/xhn_file_stream.cpp; sourceTree = "<group>"; };
 		68F877B817F9A3F500FAA0DF /* Xgc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Xgc; sourceTree = BUILT_PRODUCTS_DIR; };
 		68F877BD17F9A3F500FAA0DF /* Xgc.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = Xgc.1; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -139,6 +141,7 @@
 		681EE4AE17F9A45800952372 /* common */ = {
 			isa = PBXGroup;
 			children = (
+				68C1084D182E4F8000FACBE8 /* xhn_file_stream.cpp */,
 				6896F5FC1829E78E00B1765D /* xhn_btree.hpp */,
 				681EE4EA17F9A4A000952372 /* apple_file_manager.h */,
 				681EE4EB17F9A4A000952372 /* array.h */,
@@ -319,6 +322,7 @@
 				681EE4D817F9A48100952372 /* list.cpp in Sources */,
 				681EE4DF17F9A48100952372 /* rwbuffer.cpp in Sources */,
 				681EE52717F9A52000952372 /* Xgc.cpp in Sources */,
+				68C1084F182E4F8000FACBE8 /* xhn_file_stream.cpp in Sources */,
 				681EE4E617F9A48100952372 /* xhn_static_string.cpp in Sources */,
 				681EE4D117F9A48100952372 /* emem.cpp in Sources */,
 				681EE4E317F9A48100952372 /* xhn_garbage_collector.cpp in Sources */,

@@ -35,8 +35,14 @@
 namespace xhn
 {
     typedef void (*destructor) (void*);
-    class mem_btree_node : public btree_node
+    class mem_btree_node : public btree_node<vptr, ref_ptr>
     {
+    public:
+        struct data
+        {
+            const char* name;
+            destructor dest;
+        };
 	public:
 		static Unlocked_mem_allocator* s_allocator;
 	public:
@@ -291,61 +297,56 @@ namespace xhn
     
     class FMemNodeAllocator
     {
-    private:
-        const char* m_curt_name;
-        destructor m_curt_dest;
     public:
-        FMemNodeAllocator()
-        : m_curt_name(NULL)
-        , m_curt_dest(NULL)
-        {
-        }
+        FMemNodeAllocator() {}
         
-        void set(const char* name, destructor dest)
-        {
-            m_curt_name = name;
-            m_curt_dest = dest;
-        }
-        
-        void deallocate(btree_node* ptr, euint)
+        void deallocate(mem_btree_node* ptr, euint)
         {
             UnlockedMemAllocator_free(mem_btree_node::s_allocator, ptr);
         }
         
-        btree_node* allocate(euint count)
+        mem_btree_node* allocate(euint count)
         {
             if (!mem_btree_node::s_allocator) {
                 mem_btree_node::s_allocator = UnlockedMemAllocator_new();
             }
-            return (btree_node*)UnlockedMemAllocator_alloc(
+            return (mem_btree_node*)UnlockedMemAllocator_alloc(
                         mem_btree_node::s_allocator,
                         count * sizeof(mem_btree_node),
                         false);
         }
         
-        void construct(btree_node* ptr)
+        void construct(mem_btree_node* ptr, vptr data)
         {
-            new ( (mem_btree_node*)ptr ) mem_btree_node ();
+            new ( ptr ) mem_btree_node ();
+            if (data) {
+                mem_btree_node::data* node_data = (mem_btree_node::data*)data;
+                ptr->name = node_data->name;
+                ptr->dest = node_data->dest;
+            }
         }
         
-        void pre_destroy(btree_node* ptr)
+        void pre_destroy(mem_btree_node* ptr)
         {
-            if (((mem_btree_node*)ptr)->dest) {
-				((mem_btree_node*)ptr)->dest(((mem_btree_node*)ptr)->begin_addr);
+            if (ptr->dest) {
+				ptr->dest(ptr->begin_addr);
 			}
         }
-        void destroy(btree_node* ptr)
+        void destroy(mem_btree_node* ptr)
         {
-            ((mem_btree_node*)ptr)->~mem_btree_node();
+            ptr->~mem_btree_node();
         }
     };
     
-    class mem_btree : public btree<FMemNodeAllocator>
+    class mem_btree : public btree<mem_btree_node, vptr, ref_ptr, FMemNodeAllocator>
     {
     public:
         mem_btree_node* insert(const vptr ptr, euint size, const char* name, destructor dest) {
-            allocater.set(name, dest);
-            return (mem_btree_node*)btree<FMemNodeAllocator>::insert(ptr, size);
+            mem_btree_node::data data = {name, dest};
+            return (mem_btree_node*)btree<mem_btree_node,
+            vptr,
+            ref_ptr,
+            FMemNodeAllocator>::insert(ptr, size, &data);
         }
         void push_detach_node(mem_btree_node* node);
     };

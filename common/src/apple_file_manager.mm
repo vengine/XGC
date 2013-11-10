@@ -17,6 +17,7 @@
 //
 
 #include "apple_file_manager.h"
+#include "xhn_set.hpp"
 #import <Foundation/Foundation.h>
 
 void GetFilenames(FileDirectory dir, FilenameArray* filenames)
@@ -47,7 +48,7 @@ void GetPaths(const char* baseFolder,
               xhn::vector<xhn::string>& subFolders,
               xhn::vector<xhn::string>& paths)
 {
-    NSFileManager *fileManager = [[NSFileManager alloc] init];
+    NSFileManager *fileManager = [[[NSFileManager alloc] init] autorelease];
     NSString *strFolder = [NSString stringWithCString:baseFolder encoding:NSUTF8StringEncoding];
     NSURL *directoryURL = [[NSURL alloc] initWithString:strFolder]; // URL pointing to the directory you want to browse
     NSArray *keys = [NSArray arrayWithObject:NSURLIsDirectoryKey];
@@ -85,16 +86,16 @@ void GetPaths(const char* baseFolder,
 
 AppleFileManager::AppleFileManager()
 {
-    m_fileManager = (__bridge vptr)[[NSFileManager alloc] init];
+    m_fileManager = (vptr)[[NSFileManager alloc] init];
 }
 AppleFileManager::~AppleFileManager()
 {
-    NSFileManager *fileManager = (__bridge NSFileManager *)m_fileManager;
+    NSFileManager *fileManager = (NSFileManager *)m_fileManager;
     [fileManager release];
 }
 bool AppleFileManager::is_exist(const xhn::wstring& dir, bool& is_directory)
 {
-    NSFileManager *fileManager = (__bridge NSFileManager *)m_fileManager;
+    NSFileManager *fileManager = (NSFileManager *)m_fileManager;
     xhn::Utf8 utf8(dir.c_str());
     NSString *strDir = [NSString stringWithCString:((xhn::string)utf8).c_str() encoding:NSUTF8StringEncoding];
     BOOL isDir = NO;
@@ -155,6 +156,7 @@ xhn::file_stream_ptr AppleFileManager::create_and_open(const xhn::wstring& path)
 }
 AppleFile::~AppleFile()
 {
+    synchronize_file();
     if (m_fileHandle) {
         NSFileHandle *fileHandle = (NSFileHandle*)m_fileHandle;
         [fileHandle closeFile];
@@ -186,6 +188,18 @@ bool AppleFile::write(const euint8* buffer, euint64 size)
     else
         return false;
 }
+euint64 AppleFile::get_size()
+{
+    euint64 ret = 0;
+    if (m_fileHandle) {
+        NSFileHandle *fileHandle = (NSFileHandle*)m_fileHandle;
+        euint64 pos = [fileHandle offsetInFile];
+        [fileHandle seekToEndOfFile];
+        ret = [fileHandle offsetInFile];
+        [fileHandle seekToFileOffset:pos];
+    }
+    return ret;
+}
 euint64 AppleFile::get_pos()
 {
     euint64 ret = 0;
@@ -205,12 +219,25 @@ euint64 AppleFile::set_pos(euint64 pos)
     }
     return ret;
 }
-/**
+void AppleFile::set_base_offset(euint64 offs)
+{
+    m_baseOffset = offs;
+}
+
 euint8& AppleFile::operator[] (euint64 pos)
 {
-    ///
+    pos += m_baseOffset;
+    xhn::file_block* block = access(this, pos);
+    return *((euint8*)block->access(pos - block->begin_addr, sizeof(euint8)));
 }
- **/
+
+const euint8& AppleFile::operator[] (euint64 pos) const
+{
+    pos += m_baseOffset;
+    AppleFile* file = (AppleFile*)this;
+    const xhn::file_block* block = access((AppleFile*)file, pos);
+    return *((const euint8*)block->access(pos - block->begin_addr, sizeof(euint8)));
+}
 /**
  * Copyright (c) 2011-2013 Xu Haining
  *
