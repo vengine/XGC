@@ -35,7 +35,12 @@
 namespace xhn
 {
     typedef void (*destructor) (void*);
-    class mem_btree_node : public btree_node<vptr, ref_ptr>
+    class mem_btree_node :
+    public btree_node<
+    vptr,
+    ref_ptr,
+    UnlockedSetNodeAllocator< range<vptr> >
+    >
     {
     public:
         struct data
@@ -44,195 +49,6 @@ namespace xhn
             destructor dest;
         };
 	public:
-		static Unlocked_mem_allocator* s_allocator;
-	public:
-		template <typename K, typename V>
-		class FMapNodeAllocator
-		{
-		public:
-			typedef euint size_type;
-			typedef euint difference_type;
-			typedef rbtree_node<K>* pointer;
-			typedef const rbtree_node<K>* const_pointer;
-			typedef rbtree_node<K> value_type;
-			typedef rbtree_node<K>& reference;
-			typedef const rbtree_node<K>& const_reference;
-
-			template<typename AK, typename AV>
-			struct rebind
-			{
-				typedef FMapNodeAllocator<AK, AV> other;
-			};
-
-			pointer address(reference v) const
-			{	
-				return &v;
-			}
-
-			const_pointer address(const_reference v) const
-			{	
-				return &v;
-			}
-
-			FMapNodeAllocator()
-			{
-			}
-
-			FMapNodeAllocator(const FMapNodeAllocator& rth)
-			{
-			}
-
-			template<typename AK, typename AV>
-			FMapNodeAllocator(const FMapNodeAllocator<AK, AV>&)
-			{
-			}
-
-			template<typename AK, typename AV>
-			FMapNodeAllocator<AK, AV>& operator=(const FMapNodeAllocator<AK, AV>&)
-			{
-				return (*this);
-			}
-
-			void deallocate(pointer ptr, size_type)
-			{	
-				UnlockedMemAllocator_free(mem_btree_node::s_allocator, ptr);
-			}
-
-			pointer allocate(size_type count)
-			{
-				if (!mem_btree_node::s_allocator) {
-					mem_btree_node::s_allocator = UnlockedMemAllocator_new();
-				}
-				return (pointer)UnlockedMemAllocator_alloc(
-					mem_btree_node::s_allocator, 
-					count * sizeof(value_type), 
-					false);
-			}
-
-			pointer allocate(size_type count, const void*)
-			{
-				if (!mem_btree_node::s_allocator) {
-					mem_btree_node::s_allocator = UnlockedMemAllocator_new();
-				}
-				return (pointer)UnlockedMemAllocator_alloc(
-					mem_btree_node::s_allocator, 
-					count * sizeof(value_type), 
-					false);
-			}
-
-			void construct(pointer ptr, const K& v)
-			{	
-				new (ptr) pair<K, V>();
-			}
-
-			void construct(pointer ptr)
-			{	
-				new ( ptr ) pair<K, V> ();
-			}
-
-			void destroy(pointer ptr)
-			{	
-				((pair<K, V>*)ptr)->~pair<K, V>();
-			}
-
-			size_type max_size() const {
-				return static_cast<size_type>(-1) / sizeof(value_type);
-			}
-		};
-
-		template <typename K>
-		class FSetNodeAllocator
-		{
-		public:
-			typedef euint size_type;
-			typedef euint difference_type;
-			typedef rbtree_node<K>* pointer;
-			typedef const rbtree_node<K>* const_pointer;
-			typedef rbtree_node<K> value_type;
-			typedef rbtree_node<K>& reference;
-			typedef const rbtree_node<K>& const_reference;
-
-			template<typename AK>
-			struct rebind
-			{
-				typedef FSetNodeAllocator<AK> other;
-			};
-
-			pointer address(reference v) const
-			{	
-				return &v;
-			}
-
-			const_pointer address(const_reference v) const
-			{	
-				return &v;
-			}
-
-			FSetNodeAllocator()
-			{
-			}
-
-			FSetNodeAllocator(const FSetNodeAllocator& rth)
-			{
-			}
-
-			template<typename AK>
-			FSetNodeAllocator(const FSetNodeAllocator<AK>&)
-			{
-			}
-
-			template<typename AK>
-			FSetNodeAllocator<AK>& operator=(const FSetNodeAllocator<AK>&)
-			{
-				return (*this);
-			}
-
-			void deallocate(pointer ptr, size_type)
-			{	
-				UnlockedMemAllocator_free(mem_btree_node::s_allocator, ptr);
-			}
-
-			pointer allocate(size_type count)
-			{
-				if (!mem_btree_node::s_allocator) {
-					mem_btree_node::s_allocator = UnlockedMemAllocator_new();
-				}
-				return (pointer)UnlockedMemAllocator_alloc(
-					mem_btree_node::s_allocator, 
-					count * sizeof(value_type), 
-					false);
-			}
-
-			pointer allocate(size_type count, const void*)
-			{
-				if (!mem_btree_node::s_allocator) {
-					mem_btree_node::s_allocator = UnlockedMemAllocator_new();
-				}
-				return (pointer)UnlockedMemAllocator_alloc(
-					mem_btree_node::s_allocator, 
-					count * sizeof(value_type), 
-					false);
-			}
-
-			void construct(pointer ptr, const K& v)
-			{	
-				new (ptr) rbtree_node<K>();
-			}
-
-			void construct(pointer ptr)
-			{	
-				new ( ptr ) rbtree_node<K> ();
-			}
-
-			void destroy(pointer ptr)
-			{	
-				ptr->~rbtree_node<K>();
-			}
-
-			size_type max_size() const {
-				return static_cast<size_type>(-1) / sizeof(value_type);
-			}
-		};
 		struct input_pair
 		{
 			mem_btree_node* node;
@@ -252,14 +68,14 @@ namespace xhn
 		};
 		typedef set<input_pair, 
 			        FLessProc<input_pair>, 
-					mem_btree_node::FSetNodeAllocator<input_pair>> input_mem_set;
+					UnlockedSetNodeAllocator<input_pair>> input_mem_set;
         typedef map<vptr, 
 			        mem_btree_node*,
 		            FLessProc<vptr>,
-					mem_btree_node::FMapNodeAllocator<vptr, mem_btree_node*>> mem_map;
+					UnlockedMapNodeAllocator<vptr, mem_btree_node*>> mem_map;
 		typedef set<mem_btree_node*,
 			        FLessProc<mem_btree_node*>, 
-			        mem_btree_node::FSetNodeAllocator<mem_btree_node*>> mem_set;
+			        UnlockedSetNodeAllocator<mem_btree_node*>> mem_set;
     public:
 		input_mem_set input_set;
 		mem_map output_map;
@@ -302,16 +118,16 @@ namespace xhn
         
         void deallocate(mem_btree_node* ptr, euint)
         {
-            UnlockedMemAllocator_free(mem_btree_node::s_allocator, ptr);
+            UnlockedMemAllocator_free(s_unlocked_allocator, ptr);
         }
         
         mem_btree_node* allocate(euint count)
         {
-            if (!mem_btree_node::s_allocator) {
-                mem_btree_node::s_allocator = UnlockedMemAllocator_new();
+            if (!s_unlocked_allocator) {
+                s_unlocked_allocator = UnlockedMemAllocator_new();
             }
             return (mem_btree_node*)UnlockedMemAllocator_alloc(
-                        mem_btree_node::s_allocator,
+                        s_unlocked_allocator,
                         count * sizeof(mem_btree_node),
                         false);
         }

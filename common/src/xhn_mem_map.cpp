@@ -12,8 +12,6 @@
 #include "xhn_mem_map.hpp"
 #include "xhn_garbage_collector.hpp"
 
-Unlocked_mem_allocator* xhn::mem_btree_node::s_allocator = NULL;
-
 void xhn::mem_btree_node::Attach(const vptr handle, mem_btree_node* mem)
 {
 	output_map.insert(xhn::make_pair(handle, mem));

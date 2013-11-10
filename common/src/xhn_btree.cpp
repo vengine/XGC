@@ -6,4 +6,6 @@
 //  Copyright (c) 2013年 徐 海宁. All rights reserved.
 //
 
-#include "xhn_btree.h"
+#include "xhn_btree.hpp"
+
+Unlocked_mem_allocator* xhn::s_unlocked_allocator = NULL;

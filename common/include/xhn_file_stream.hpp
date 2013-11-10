@@ -27,7 +27,12 @@ namespace xhn
 {
     class file_stream;
     class FFileBlockAllocator;
-    class file_block : public btree_node<euint64, euint64>
+    class file_block :
+    public btree_node<
+    euint64,
+    euint64,
+    UnlockedSetNodeAllocator< range<euint64> >
+    >
     {
     public:
         file_block* prev;

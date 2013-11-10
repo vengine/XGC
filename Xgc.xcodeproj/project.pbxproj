@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		680347FD182F7B1400DD66F4 /* xhn_btree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 680347FC182F7B1400DD66F4 /* xhn_btree.cpp */; };
 		681EE4CD17F9A48100952372 /* apple_file_manager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 681EE4B017F9A48100952372 /* apple_file_manager.mm */; };
 		681EE4CE17F9A48100952372 /* eassert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 681EE4B117F9A48100952372 /* eassert.cpp */; };
 		681EE4CF17F9A48100952372 /* elog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 681EE4B217F9A48100952372 /* elog.cpp */; };
@@ -49,6 +50,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		680347FC182F7B1400DD66F4 /* xhn_btree.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xhn_btree.cpp; path = common/src/xhn_btree.cpp; sourceTree = "<group>"; };
 		681EE4B017F9A48100952372 /* apple_file_manager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = apple_file_manager.mm; path = common/src/apple_file_manager.mm; sourceTree = "<group>"; };
 		681EE4B117F9A48100952372 /* eassert.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = eassert.cpp; path = common/src/eassert.cpp; sourceTree = "<group>"; };
 		681EE4B217F9A48100952372 /* elog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = elog.cpp; path = common/src/elog.cpp; sourceTree = "<group>"; };
@@ -141,6 +143,7 @@
 		681EE4AE17F9A45800952372 /* common */ = {
 			isa = PBXGroup;
 			children = (
+				680347FC182F7B1400DD66F4 /* xhn_btree.cpp */,
 				68C1084D182E4F8000FACBE8 /* xhn_file_stream.cpp */,
 				6896F5FC1829E78E00B1765D /* xhn_btree.hpp */,
 				681EE4EA17F9A4A000952372 /* apple_file_manager.h */,
@@ -328,6 +331,7 @@
 				681EE4E317F9A48100952372 /* xhn_garbage_collector.cpp in Sources */,
 				681EE4D417F9A48100952372 /* exception.cpp in Sources */,
 				681EE4E717F9A48100952372 /* xhn_string.cpp in Sources */,
+				680347FD182F7B1400DD66F4 /* xhn_btree.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

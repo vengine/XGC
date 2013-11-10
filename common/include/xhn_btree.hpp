@@ -16,10 +16,30 @@
 #include <new>
 
 #include "xhn_config.hpp"
+#include "xhn_pair.hpp"
 
 namespace xhn
 {
-    template <typename Addr, typename RefAddr>
+    template <typename Addr>
+    struct range
+    {
+        Addr begin_addr;
+        Addr end_addr;
+        bool operator < (const range& a) const {
+            if (end_addr && a.end_addr) {
+                return begin_addr < a.begin_addr;
+            }
+            else if (!end_addr && a.end_addr) {
+                return begin_addr < a.end_addr;
+            }
+            else if (end_addr && !a.end_addr) {
+                return end_addr < a.begin_addr;
+            }
+            else
+                return false;
+        }
+    };
+    template <typename Addr, typename RefAddr, typename SetNodeAllocator>
     class btree_node
     {
     public:
@@ -243,6 +263,165 @@ namespace xhn
 		euint get_alloced_size() {
 			return alloced_size;
 		}
+    };
+    
+    extern Unlocked_mem_allocator* s_unlocked_allocator;
+    template <typename K, typename V>
+    class UnlockedMapNodeAllocator
+    {
+    public:
+        typedef euint size_type;
+        typedef euint difference_type;
+        typedef rbtree_node<K>* pointer;
+        typedef const rbtree_node<K>* const_pointer;
+        typedef rbtree_node<K> value_type;
+        typedef rbtree_node<K>& reference;
+        typedef const rbtree_node<K>& const_reference;
+        
+        template<typename AK, typename AV>
+        struct rebind
+        {
+            typedef UnlockedMapNodeAllocator<AK, AV> other;
+        };
+        
+        pointer address(reference v) const
+        {
+            return &v;
+        }
+        
+        const_pointer address(const_reference v) const
+        {
+            return &v;
+        }
+        
+        UnlockedMapNodeAllocator()
+        {
+        }
+        
+        void deallocate(pointer ptr, size_type)
+        {
+            UnlockedMemAllocator_free(s_unlocked_allocator, ptr);
+        }
+        
+        pointer allocate(size_type count)
+        {
+            if (!s_unlocked_allocator) {
+                s_unlocked_allocator = UnlockedMemAllocator_new();
+            }
+            return (pointer)UnlockedMemAllocator_alloc(
+                                                       s_unlocked_allocator,
+                                                       count * sizeof(value_type),
+                                                       false);
+        }
+        
+        pointer allocate(size_type count, const void*)
+        {
+            if (!s_unlocked_allocator) {
+                s_unlocked_allocator = UnlockedMemAllocator_new();
+            }
+            return (pointer)UnlockedMemAllocator_alloc(
+                                                       s_unlocked_allocator,
+                                                       count * sizeof(value_type),
+                                                       false);
+        }
+        
+        void construct(pointer ptr, const K& v)
+        {
+            new (ptr) pair<K, V>();
+        }
+        
+        void construct(pointer ptr)
+        {
+            new ( ptr ) pair<K, V> ();
+        }
+        
+        void destroy(pointer ptr)
+        {
+            ((pair<K, V>*)ptr)->~pair<K, V>();
+        }
+        
+        size_type max_size() const {
+            return static_cast<size_type>(-1) / sizeof(value_type);
+        }
+    };
+    
+    template <typename K>
+    class UnlockedSetNodeAllocator
+    {
+    public:
+        typedef euint size_type;
+        typedef euint difference_type;
+        typedef rbtree_node<K>* pointer;
+        typedef const rbtree_node<K>* const_pointer;
+        typedef rbtree_node<K> value_type;
+        typedef rbtree_node<K>& reference;
+        typedef const rbtree_node<K>& const_reference;
+        
+        template<typename AK>
+        struct rebind
+        {
+            typedef UnlockedSetNodeAllocator<AK> other;
+        };
+        
+        pointer address(reference v) const
+        {
+            return &v;
+        }
+        
+        const_pointer address(const_reference v) const
+        {
+            return &v;
+        }
+        
+        UnlockedSetNodeAllocator()
+        {
+        }
+        
+        void deallocate(pointer ptr, size_type)
+        {
+            UnlockedMemAllocator_free(s_unlocked_allocator, ptr);
+        }
+        
+        pointer allocate(size_type count)
+        {
+            if (!s_unlocked_allocator) {
+                s_unlocked_allocator = UnlockedMemAllocator_new();
+            }
+            return (pointer)UnlockedMemAllocator_alloc(
+                                                       s_unlocked_allocator,
+                                                       count * sizeof(value_type),
+                                                       false);
+        }
+        
+        pointer allocate(size_type count, const void*)
+        {
+            if (!s_unlocked_allocator) {
+                s_unlocked_allocator = UnlockedMemAllocator_new();
+            }
+            return (pointer)UnlockedMemAllocator_alloc(
+                                                       s_unlocked_allocator,
+                                                       count * sizeof(value_type),
+                                                       false);
+        }
+        
+        void construct(pointer ptr, const K& v)
+        {
+            new (ptr) rbtree_node<K>();
+        }
+        
+        void construct(pointer ptr)
+        {
+            new ( ptr ) rbtree_node<K> ();
+        }
+        
+        void destroy(pointer ptr)
+        {
+            ptr->~rbtree_node<K>();
+        }
+        
+        size_type max_size() const {
+            return static_cast<size_type>(-1) / sizeof(value_type);
+        }
     };
 }
 
