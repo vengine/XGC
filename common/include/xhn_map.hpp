@@ -268,9 +268,10 @@ public:
 		}
 	}
 
-    void insert ( const K key, const V &value ) {
+    rbnode_type * insert ( const K key, const V &value ) {
         rbnode_type *node = ( rbnode_type * ) rbtree_type::_find ( &m_rbtree, (K&)key, true );
         node->second = value;
+        return node;
     }
     iterator insert ( const pair<K, V>& key_value_pair ) {
         pair<K, V>& n_key_value_pair = (pair<K, V>&)key_value_pair;

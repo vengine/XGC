@@ -113,16 +113,25 @@ public:
 	{
 		vptr begin_addr;
 		vptr end_addr;
-        mem_btree_node* mem_node;
+        ///mem_btree_node* mem_node;
+        mem_node* mem_node;
 	};
 public:
-	mem_btree m_btree;
+	///mem_btree m_btree;
+    mem_map m_btree;
 	xhn::fixed_queue<mem_info> m_mem_info_queue;
+    /**
     mem_btree_node* orphan;
 	mem_btree_node* head;
 	mem_btree_node* tail;
 	mem_btree_node* root_head;
 	mem_btree_node* root_tail;
+     **/
+    mem_node* orphan;
+	mem_node* head;
+	mem_node* tail;
+	mem_node* root_head;
+	mem_node* root_tail;
     esint32 command_count;
 	euint prev_alloced_mems;
 	State curt_state;
@@ -156,16 +165,18 @@ public:
 	}
 
 	vptr alloc ( euint size );
-	mem_btree_node* find_node_in_queue(vptr mem);
+	mem_node* find_node_in_queue(vptr mem);
 	void remove_in_queue(vptr mem);
 	void insert ( const vptr p, euint s, const char* n, destructor d );
 	void remove ( const vptr p );
 	void attach ( const vptr section, vptr mem );
 	void detach ( const vptr section, vptr mem );
-	void push_orphan_node(mem_btree_node* node);
-	void push_detach_node(mem_btree_node* node);
+	///void push_orphan_node(mem_btree_node* node);
+	///void push_detach_node(mem_btree_node* node);
+    void push_orphan_node(mem_node* node);
+    void push_detach_node(mem_node* node);
 	void scan_orphan_nodes(esint32 num_cmds);
-	void erase(mem_btree_node* node);
+	void erase(mem_node* node);
 	void pre_collect();
 	void mark_not_garbage();
 	void collect();

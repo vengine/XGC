@@ -145,7 +145,7 @@ vptr xhn::garbage_collect_robot::alloc ( euint size ) {
 #endif
 	return ret;
 }
-xhn::mem_btree_node* xhn::garbage_collect_robot::find_node_in_queue(vptr mem) {
+xhn::mem_node* xhn::garbage_collect_robot::find_node_in_queue(vptr mem) {
 	xhn::fixed_queue<mem_info>::iterator iter = m_mem_info_queue.begin();
 	xhn::fixed_queue<mem_info>::iterator end = m_mem_info_queue.end();
 	for (; iter != end; iter++) {
@@ -172,10 +172,11 @@ void xhn::garbage_collect_robot::remove_in_queue(vptr mem) {
 	}
 }
 void xhn::garbage_collect_robot::insert ( const vptr p, euint s, const char* n, destructor d ) {
-	mem_btree_node* node = m_btree.insert((vptr)p, s, n, d);
+	mem_node* node = m_btree.insert((vptr)p, s, n, d);
 	node->is_garbage = false;
 	push_orphan_node(node);
-	mem_info info = {node->begin_addr, node->end_addr, node};
+    mem_map::node_ptr ptr = node->_to_ptr(node);
+	mem_info info = {ptr->first.begin_addr, ptr->first.end_addr, node};
 	if (!m_mem_info_queue.push(info)) {
 		m_mem_info_queue.pop();
 		m_mem_info_queue.push(info);
@@ -195,14 +196,14 @@ void xhn::garbage_collect_robot::remove ( const vptr p ) {
 	}
 }
 void xhn::garbage_collect_robot::attach ( const vptr section, vptr mem ) {
-	mem_btree_node* node = find_node_in_queue(mem);///m_btree.find(mem);
+	mem_node* node = find_node_in_queue(mem);///m_btree.find(mem);
 	if (!node) {
-		node = (mem_btree_node*)m_btree.find(mem);
+		node = (mem_node*)m_btree.find(mem);
 	}
 	if (node) {
-		mem_btree_node* parent = find_node_in_queue(section);///m_btree.find(section);
+		mem_node* parent = find_node_in_queue(section);///m_btree.find(section);
 		if (!parent) {
-			parent = (mem_btree_node*)m_btree.find(section);
+			parent = (mem_node*)m_btree.find(section);
 		}
 		if (parent) {
 			parent->Attach(section, node);
@@ -330,14 +331,14 @@ void xhn::garbage_collect_robot::attach ( const vptr section, vptr mem ) {
 	}
 }
 void xhn::garbage_collect_robot::detach ( const vptr section, vptr mem ) {
-	mem_btree_node* node = find_node_in_queue(mem);///m_btree.find(mem);
+	mem_node* node = find_node_in_queue(mem);///m_btree.find(mem);
 	if (!node) {
-		node = (mem_btree_node*)m_btree.find(mem);
+		node = (mem_node*)m_btree.find(mem);
 	}
 	if (node) {
-		mem_btree_node* parent = find_node_in_queue(section);///m_btree.find(section);
+		mem_node* parent = find_node_in_queue(section);///m_btree.find(section);
 		if (!parent) {
-			parent = (mem_btree_node*)m_btree.find(section);
+			parent = (mem_node*)m_btree.find(section);
 		}
 		if (parent) {
 			parent->Detach(section, node);
@@ -464,6 +465,7 @@ void xhn::garbage_collect_robot::detach ( const vptr section, vptr mem ) {
 		}
 	}
 }
+/**
 void xhn::garbage_collect_robot::push_orphan_node(mem_btree_node* node) {
 	if (orphan) {
 		orphan->prev = node;
@@ -502,13 +504,53 @@ void xhn::garbage_collect_robot::push_detach_node(mem_btree_node* node) {
 			root_head = node;
 	}
 }
+ **/
+void xhn::garbage_collect_robot::push_orphan_node(mem_node* node) {
+	if (orphan) {
+		orphan->prev = node;
+	}
+	node->next = orphan;
+	node->prev = NULL;
+	orphan = node;
+}
+void xhn::garbage_collect_robot::push_detach_node(mem_node* node)
+{
+    if (node == tail)
+		return;
+	if (node == orphan) { orphan = node->next; }
+	if (node == head)   { head = node->next; }
+	if (node->prev)     { node->prev->next = node->next; }
+	if (node->next)     { node->next->prev = node->prev; }
+	node->next = NULL;
+	node->prev = tail;
+	if (tail)
+		tail->next = node;
+	tail = node;
+	if (!head)
+		head = node;
+    
+	if (node->root_ref_count) {
+		if (node == root_tail)
+			return;
+		if (node == root_head)   { root_head = node->root_next; }
+		if (node->root_prev)     { node->root_prev->root_next = node->root_next; }
+		if (node->root_next)     { node->root_next->root_prev = node->root_prev; }
+		node->root_next = NULL;
+		node->root_prev = root_tail;
+		if (root_tail)
+			root_tail->root_next = node;
+		root_tail = node;
+		if (!root_head)
+			root_head = node;
+	}
+}
 void xhn::garbage_collect_robot::scan_orphan_nodes(esint32 num_cmds) {
 	curt_state = NormalState;
-	mem_btree_node* node = orphan;
+	mem_node* node = orphan;
 	while (node) {
 		node->orphan_count -= num_cmds;
 		if (node->orphan_count <= 0) {
-			mem_btree_node* tmp = node->next;
+			mem_node* tmp = node->next;
 			push_detach_node(node);
 			node = tmp;
 		}
@@ -516,7 +558,7 @@ void xhn::garbage_collect_robot::scan_orphan_nodes(esint32 num_cmds) {
 			node = node->next;
 	}
 }
-void xhn::garbage_collect_robot::erase(mem_btree_node* node) {
+void xhn::garbage_collect_robot::erase(mem_node* node) {
 	node->_Erase();
 
 	if (node == head) { head = node->next; }
@@ -533,7 +575,7 @@ void xhn::garbage_collect_robot::pre_collect() {
 	if (!all_collect)
 	    return;
 	curt_state = PreCollectState;
-	mem_btree_node* node = tail;
+	mem_node* node = tail;
 	while (node) {
 		node->is_garbage = true;
 		node = node->prev;
@@ -543,7 +585,7 @@ void xhn::garbage_collect_robot::mark_not_garbage() {
 	if (!all_collect)
 		return;
 	curt_state = MarkNotGarbageState;
-	mem_btree_node* node = root_tail;
+	mem_node* node = root_tail;
 	while (node) {
 		if (node->root_ref_count) {
 			node->MarkNotGarbage();
@@ -555,13 +597,14 @@ void xhn::garbage_collect_robot::collect() {
 	if (!all_collect)
 		return;
 	curt_state = CollectState;
-	mem_btree_node* node = tail;
+	mem_node* node = tail;
 	while (node) {
 		if (node->is_garbage) {
-			vptr ptr = node->begin_addr;
+            mem_map::node_ptr ptr = node->_to_ptr(node);
+			vptr p = ptr->first.begin_addr;
 			erase(node);
 			node = node->prev;
-			remove(ptr);
+			remove(p);
 		}
 		else {
 			node = node->prev;
@@ -580,18 +623,19 @@ void xhn::garbage_collect_robot::track() {
 	curt_state = TrackState;
 
 	euint delta_mem = 0;
-	if (m_btree.count > prev_alloced_mems)
-		delta_mem = m_btree.count - prev_alloced_mems;
+	if (m_btree.size() > prev_alloced_mems)
+		delta_mem = m_btree.size() - prev_alloced_mems;
 	esint count = (esint)(delta_mem * 5);
-	prev_alloced_mems = m_btree.count;
+	prev_alloced_mems = m_btree.size();
 
-	mem_btree_node* node = tail;
+	mem_node* node = tail;
 	while (node) {
 		if (!node->TrackBack()) {
-			vptr ptr = node->begin_addr;
+            mem_map::node_ptr ptr = node->_to_ptr(node);
+			vptr p = ptr->first.begin_addr;
 			erase(node);
 			node = node->prev;
-			remove(ptr);
+			remove(p);
 		}
 		else {
 			node = node->prev;

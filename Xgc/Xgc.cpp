@@ -225,6 +225,75 @@ void test3()
 	}
 }
 
+void test4()
+{
+    /**
+    int num = 1000000;
+    xhn::vector<vptr> ptrs;
+    xhn::mem_btree tree;
+    xhn::set<vptr> ptr_set;
+    xhn::mem_map2<vptr, euint64> mem_map;
+    ptrs.resize(num);
+    for (int i = 0; i < num; i++) {
+        ptrs[i] = (vptr)rand();
+    }
+    
+    {
+        TimeCheckpoint tc = TimeCheckpoint::Tick();
+        for (int i = 0; i < num; i++) {
+            mem_map.insert(ptrs[i], (vptr)((ref_ptr)ptrs[i] + 1), 0);
+        }
+        TimeCheckpoint curtTc = TimeCheckpoint::Tick();
+        double t = TimeCheckpoint::CaleElapsedTime(tc, curtTc);
+        printf("%f\n", (float)t);
+    }
+    
+    {
+        TimeCheckpoint tc = TimeCheckpoint::Tick();
+        for (int i = 0; i < num; i++) {
+            ptr_set.insert(ptrs[i]);
+        }
+        TimeCheckpoint curtTc = TimeCheckpoint::Tick();
+        double t = TimeCheckpoint::CaleElapsedTime(tc, curtTc);
+        printf("%f\n", (float)t);
+    }
+    
+    {
+        TimeCheckpoint tc = TimeCheckpoint::Tick();
+        for (int i = 0; i < num; i++) {
+            tree.insert(ptrs[i], 1, NULL, NULL);
+        }
+        TimeCheckpoint curtTc = TimeCheckpoint::Tick();
+        double t = TimeCheckpoint::CaleElapsedTime(tc, curtTc);
+        printf("%f\n", (float)t);
+    }
+     **/
+}
+
+void test5()
+{
+    /**
+    xhn::mem_map2<euint64, euint64> mem_map;
+    mem_map.insert(0, 200, 0);
+    mem_map.insert(205, 300, 0);
+    mem_map.insert(1205, 1300, 0);
+    mem_map.insert(1400, 1500, 0);
+    mem_map.insert(2400, 2500, 0);
+    
+    xhn::mem_map2<euint64, euint64>::node_ptr ret = mem_map.find(300);
+    mem_map.remove(ret);
+    if (ret)
+        printf("succ\n");
+    else
+        printf("fail\n");
+    ret = mem_map.find(300);
+    if (ret)
+        printf("succ\n");
+    else
+        printf("fail\n");
+     **/
+}
+
 struct TTT
 {
 	char mbuf0[6];
@@ -234,5 +303,6 @@ struct TTT
 int main(void)
 {
 	test0();
+    getchar();
 	return 0;
 }

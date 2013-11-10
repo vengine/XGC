@@ -17,7 +17,8 @@
 
 #include "xhn_config.hpp"
 #include "xhn_pair.hpp"
-
+#include "xhn_set.hpp"
+#include "xhn_map.hpp"
 namespace xhn
 {
     template <typename Addr>
@@ -30,7 +31,7 @@ namespace xhn
                 return begin_addr < a.begin_addr;
             }
             else if (!end_addr && a.end_addr) {
-                return begin_addr < a.end_addr;
+                return begin_addr < a.begin_addr;
             }
             else if (end_addr && !a.end_addr) {
                 return end_addr < a.begin_addr;
@@ -39,9 +40,17 @@ namespace xhn
                 return false;
         }
     };
-    template <typename Addr, typename RefAddr, typename SetNodeAllocator>
+    template <typename Addr, typename RefAddr, typename MapNodeAllocator>
     class btree_node
     {
+    private:
+        typedef
+        map<
+        range< Addr >,
+        vptr,
+        FLessProc< range<Addr> >,
+        MapNodeAllocator
+        > btree_node_map;
     public:
         euint8 section;
 		btree_node* parent;
@@ -274,7 +283,7 @@ namespace xhn
         typedef euint difference_type;
         typedef rbtree_node<K>* pointer;
         typedef const rbtree_node<K>* const_pointer;
-        typedef rbtree_node<K> value_type;
+        typedef pair<K, V> value_type;
         typedef rbtree_node<K>& reference;
         typedef const rbtree_node<K>& const_reference;
         
@@ -425,5 +434,47 @@ namespace xhn
     };
 }
 
-
+namespace xhn
+{
+    template <typename Addr, typename T>
+    class range_map
+    {
+    private:
+        typedef
+        map< range<Addr>,
+        T,
+        FLessProc< range<Addr> >,
+        UnlockedMapNodeAllocator< range<Addr>, T > >
+        range_map_t;
+    public:
+        typedef pair<range<Addr>, T>* node_ptr;
+    private:
+        range_map_t m_base;
+    public:
+        T* insert(Addr b, Addr e, const T& value) {
+            range<Addr> r = {b, e};
+            node_ptr ret = m_base.insert( r, value );
+            return &ret->second;
+        }
+        T* find(Addr ptr) {
+            range<Addr> r = {ptr, 0};
+            typename range_map_t::iterator iter = m_base.find(r);
+            if (iter != m_base.end())
+                return &iter.m_ptr->second;
+            else
+                return NULL;
+        }
+        bool remove(Addr ptr) {
+            range<Addr> r = {ptr, 0};
+            return m_base.erase(r) != 0;
+        }
+        bool remove(node_ptr ptr) {
+            typename range_map_t::iterator iter(ptr, 0);
+            return m_base.erase(iter) != 0;
+        }
+        inline euint size() const {
+            return m_base.size();
+        }
+    };
+}
 #endif /* defined(___z__xhn_btree__) */

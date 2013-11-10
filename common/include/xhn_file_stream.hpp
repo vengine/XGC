@@ -31,7 +31,7 @@ namespace xhn
     public btree_node<
     euint64,
     euint64,
-    UnlockedSetNodeAllocator< range<euint64> >
+    UnlockedMapNodeAllocator< range<euint64>, vptr >
     >
     {
     public:
